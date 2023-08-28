@@ -1,0 +1,668 @@
+---
+
+vendor: "Arista"
+
+## Override CEOS for loopback conflict
+lpbk_ulay:
+    id: "{{ lpbk_ulay_id }}"
+    desc: "Underlay Loopback"
+    addr_v4: "{{ lpbk_ulay_netv4 | ansible.utils.ipaddr(seq+10) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ lpbk_ulay_netv6 | ansible.utils.ipaddr(seq+10) | ansible.utils.ipaddr('address') }}"
+
+#Vxlan
+lpbk_olay:
+    id: "{{ lpbk_olay_id}}"
+    desc: "Overlay vTEP Endpoint"
+    addr_v4: "{{ lpbk_olay_netv4 | ansible.utils.ipaddr(rack_no) | ansible.utils.ipaddr('address') }}"
+
+vlan_port: 
+#   - 
+#    desc: "layer2 native vlan port"
+#    id: 401
+#    port_range: 
+#    port_indiv: 
+
+vlan_ranges:
+# Specify vlan ranges
+   - 
+    desc: "vlan desc here"
+    start: 
+    end: 
+
+## for underlay vlan input
+vlans:
+    app_vlans:
+        - 
+            desc: "vMgmt_Mgmt"
+            id: "101"
+            netv4: "{{ v101_netv4 }}"
+            netv6: "{{ v101_netv6 }}"
+
+        - 
+            desc: "vSAN_Mgmt"
+            id: "201"
+            netv4: "{{ v201_netv4 }}"
+            netv6: "{{ v201_netv6 }}"
+        - 
+            desc: "vTEP_Mgmt"
+            id: "301"
+            netv4: "{{ v301_netv4 }}"
+            netv6: "{{ v301_netv6 }}"
+    pair_vlan:
+        desc: "ToR_Pair_iBGP"
+        id: "4093"
+        netv4: "{{ tor_pair_netv4 }}"
+        netv6: "{{ tor_pair_netv6 }}"
+    native_vlan:
+        desc: "Native Vlan if not default 1"
+        id: "1"
+
+# sub_interfaces:
+# - phy_intf: 45
+#   sub_vlans:
+#       - 
+#           desc: "yyz-shepcorra VLAN10 Te1-1 to Eth45.11:SW:UP"
+#           id: "10"
+#           vrf:
+#           netv4: "{{ subvlan_netv4 }}"
+#       - 
+#           desc: "yyz-shepcorra VLAN11 Te1-1 to Eth45.11:SW:UP"
+#           id: "11"
+#           vrf: "campus-subnet"
+#           netv4: "{{ subvlan_netv4 }}"
+#       - 
+#           desc: "yyz-shepcorra VLAN12 Te1-1 to Eth45.11:SW:UP"
+#           id: "11"
+#           vrf: "IOT-subnet"
+#           netv4: "{{ subvlan_netv4 }}"
+#       - 
+#           desc: "yyz-shepcorra VLAN13 Te1-1 to Eth45.11:SW:UP"
+#           id: "13"
+#           vrf: "BMS-subnet"
+#           netv4: "{{ subvlan_netv4 }}"
+
+bfd:
+    interval: 100
+    min_rx: 300
+    multip: 5
+    role: "active"
+    
+oob_mgmt:
+    addr_v4: "{{ ansible_host }}/{{ oob_ipv4_mask }}"
+    gw_v4: "{{ oob_ipv4_gateway }}"
+
+# Leave/spine fabric uplinks 
+uplink_ct: 2
+fabric_link_seq:
+    - "{{ 2*uplink_ct*(seq-1) }}"
+    - "{{ 2*uplink_ct*(seq-1)+2 }}"
+
+fabric_links:
+   -
+    # 1st fabirc port
+    name: "{{ ports.fabric[0]}}"
+    desc: "Fabric Uplink01_To_Spine01"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[0]|int+1) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[0]|int+1) | ansible.utils.ipaddr('address') }}"
+   -
+    # 2nd fabirc port
+    name: "{{ ports.fabric[1]}}"
+    desc: "Fabric Uplink02_To_Spine02"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[1]|int+1) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[1]|int+1) | ansible.utils.ipaddr('address') }}"
+
+bgp_fabric_peer_v4:
+    - "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[0]) | ansible.utils.ipaddr('address') }}"
+    - "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[1]) | ansible.utils.ipaddr('address') }}"
+bgp_fabric_peer_v6:
+    - "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[0]) | ansible.utils.ipaddr('address') }}"
+    - "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[1]) | ansible.utils.ipaddr('address') }}"
+
+bgp:
+  local_as: "{{ asn_base+rack_no }}"
+  attributes:
+    - "distance bgp 20 200 200"
+    - "maximum-paths 4 ecmp 4"
+    - "no bgp bestpath ecmp-fast"
+  peer_group:
+  -
+    name: "FABRIC-PEER_v4"
+    desc: "SPINE-LEAF PEER GROUP"
+    remote_as: "{{ spine_asn }}"
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "remove-private-as"
+      - "allowas-in 3"
+      - "route-map SEND-COMMUNITY out"
+      - "send-community standard extended"
+  -
+    name: "TOR-PEER_v4"
+    desc: "TOR LEAF PEER GROUP"
+    remote_as: "{{ asn_base+rack_no }}"
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    - "evpn"
+    attributes:
+      - "update-source Vlan{{ vlans.pair_vlan.id }}"
+      - "bfd"
+      - "allowas-in 3"
+      - "send-community standard extended"
+  -
+    name: "FABRIC-PEER_EVPN"
+    desc: "EVPN PEER GROUP"
+    remote_as: "{{ spine_asn }}"
+    admin_state: "up"
+    afi:
+    - "evpn"
+    attributes:
+      - "update-source loopback{{lpbk_ulay.id}}"
+      - "send-community extended"
+      - "ebgp-multihop 3"
+  -
+    name: "TOR-PEER_EVPN"
+    desc: "TOR LEAF PEER EVPN GROUP"
+    remote_as: "{{ asn_base+rack_no }}"
+    admin_state: "up"
+    afi:
+    - "evpn"
+    attributes:
+      - "update-source loopback{{lpbk_ulay.id}}"
+      - "bfd"
+      - "allowas-in 3"
+      - "send-community extended"
+  -
+    name: "DEFAULT-ONLY"
+    desc: "DEFAULT ONLY PEER GROUP"
+    remote_as: "{{ core_asn }}"
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "remove-private-as"
+      - "update-source Loopback{{lpbk_ulay.id}}"
+      - "rib-in pre-policy retain all"
+      - "ebgp-multihop 3"
+      - "route-map DEFAULT-ONLY-CUSTOMERS-OUT out"
+      - "maximum-routes 12000"
+  -
+    name: "DEFAULT-ONLY-VCF"
+    desc: "DEFAULT ONLY PEER GROUP"
+    remote_as: 65401
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "local-as 65400 no-prepend replace-as"
+      - "rib-in pre-policy retain all"
+      - "route-map DEFAULT-ONLY-CUSTOMERS-OUT out"
+      - "maximum-routes 200"
+  -
+    name: "NO-SEND"
+    desc: "NO SEND PREFIX PEER GROUP"
+    remote_as:
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "remove-private-as"
+      - "update-source Loopback{{lpbk_ulay.id}}"
+      - "rib-in pre-policy retain all"
+      - "ebgp-multihop 3"
+      - "route-map NO-SEND-CUSTOMERS-OUT out"
+      - "maximum-routes 12000"
+  -
+    name: "FABRIC-PEER_v6"
+    desc: "SPINE-LEAF V6 PEER GROUP"
+    remote_as: "{{ spine_asn }}"
+    admin_state: "up"
+    afi:
+    - "ipv6"
+    attributes:
+      - "remove-private-as"
+      - "allowas-in 3"
+      - "route-map SEND-COMMUNITY out"
+      - "send-community standard extended"
+  -
+    name: "TOR-PEER_v6"
+    desc: "TOR LEAF V6 PEER GROUP"
+    remote_as: "{{ asn_base+rack_no }}"
+    admin_state: "up"
+    afi:
+    - "ipv6"
+    attributes:
+      - "update-source Vlan{{ vlans.pair_vlan.id }}"
+      - "bfd"
+      - "allowas-in 3"
+      - "send-community standard extended"
+  -
+    name: "tester_v4"
+    desc: "Tester PEER GROUP v4"
+    remote_as: "65333"
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "update-source Vlan101"
+      - "send-community standard"
+      - "ebgp-multihop 3"
+      - "maximum-routes 0"
+  -
+    name: "tester_v6"
+    desc: "Tester PEER GROUP v4"
+    remote_as: "65333"
+    admin_state: "up"
+    afi:
+    - "ipv6"
+    attributes:
+      - "update-source Vlan101"
+      - "send-community standard"
+      - "ebgp-multihop 3"
+      - "maximum-routes 0"
+  peers:
+    - 
+      addr: "{{ bgp_fabric_peer_v4[0] }}"
+      desc: "DC Fabric Edge Peer V4"
+      remote_as: 
+      peer_group: "FABRIC-PEER_v4"
+      vrf:
+    - 
+      addr: "{{ bgp_fabric_peer_v4[1] }}"
+      desc: "DC Fabric Edge Peer V4"
+      remote_as: 
+      peer_group: "FABRIC-PEER_v4"
+      vrf:
+    - 
+      addr:
+      desc: "ToR LEAF Peer V4"
+      remote_as: 
+      peer_group: "TOR-PEER_v4"
+      vrf:
+    - 
+      addr: "{{ bgp_fabric_peer_v6[0] }}"
+      desc: "DC Fabric Edge Peer V6"
+      remote_as: 
+      peer_group: "FABRIC-PEER_v6"
+      vrf:
+    - 
+      addr: "{{ bgp_fabric_peer_v6[1] }}"
+      desc: "DC Fabric Edge Peer V6"
+      remote_as:
+      peer_group: "FABRIC-PEER_v6"
+      vrf:
+    - 
+      addr: "{{ hostvars['spine01'].lpbk_ulay.addr_v4 }}"
+      desc: "FABRIC EVPN PEER"
+      remote_as: 
+      peer_group: "FABRIC-PEER_EVPN"
+      vrf:
+    - 
+      addr: "{{ hostvars['spine02'].lpbk_ulay.addr_v4 }}"
+      desc: "FABRIC EVPN PEER"
+      remote_as: 
+      peer_group: "FABRIC-PEER_EVPN"
+      vrf:
+  afi: 
+    ipv4:
+    -
+        proto: "connected"
+        r_map: "REDIST-LOOPBACK-V4"
+    -
+        proto: "static"
+        r_map: 
+    ipv6:
+    -
+        proto: connected
+        r_map: "LOCAL-LOOPBACK-V6"
+  flowspec: 
+    ipv4: "disable"
+    ipv6: "disable"
+
+# routing protocols Parameters
+ospf_intf: [eth1,eth2,eth45.10,port-channel11]
+pim_intf: [eth1,eth2]
+
+vrrp:
+  version: 3
+  delay_reload: 3
+  group:
+    - id: 1
+      intf: "1/2"
+      type: "ipv4"
+      vrf_instance: "RED"
+      track_intf:
+        - 1/45
+      addr_v4: 10.101.1.253/24
+      vip: 10.101.1.1/24
+      vmac: "{{ tor_pair_vmac }}"
+
+cluster_acl:
+  - type: ipv4
+    name: test01
+    description: ipv4acl
+    extended: true
+    remark:
+      - number: 5
+        description: "ipv4remark"
+    entries:
+      - number: 10
+        permit: true
+        protocol: tcp
+        source: 172.100.100.0/24
+        destination: 10.10.10.10/32
+        dest_condition: eq 22
+        state: present
+      - number: 20
+        permit: true
+        protocol: tcp
+        source: 172.17.70.0/24
+        destination: 10.10.10.10/32
+        dest_condition: eq 443
+        state: present
+    stage_ingress:
+        - name: 
+          state: absent
+    stage_egress:
+        - name: vlan 104
+          state: present
+        - name: vlan 204
+          state: absent
+    state: present
+  - type: ipv6
+    name: test01_v6
+    description: ipv6acl
+    extended: true
+    remark:
+      - number: 5
+        description: "ipv6_acl_remark"
+    entries:
+      - number: 10
+        permit: true
+        protocol: tcp
+        source: 2001:1:1:1::/64
+        destination: 2001:a:a:a::a/128
+        dest_condition: eq 22
+        state: present
+      - number: 20
+        permit: true
+        protocol: tcp
+        source: 2001:2:2:2::/64
+        destination:  2001:a:a:a::a/128
+        dest_condition: eq 443
+        state: present
+    stage_ingress:
+        - name: 
+          state: absent
+    stage_egress:
+        - name: vlan 104
+          state: absent
+        - name: vlan 204
+          state: absent
+    state: present
+
+evpn:
+    arp_suppression:
+        pfx_list: "NO_ARP_PROXY"
+    vrf:
+    - 
+        name: "BMS-subnet"
+        desc: "BMS VRF"
+        rd_pfx: "{{ lpbk_olay.addr_v4 }}"
+        rt_pfx: "1001"
+        l3_vni: 
+          id: "50050"
+          vlan: "901"
+        lpbks:
+        - 
+            name: "loopback101"
+            desc: "Loopback Interface"
+            addr_v4: "10.99.11.{{ seq }}/32"
+            addr_v6: "2001:fff1:fff1::{{ '%0x' % seq }}/128"
+        ospf:
+          daemon_id: 11
+          attributes:
+            - auto-cost reference-bandwidth 100000
+            - distance ospf external 205
+            - passive-interface default
+            - max-lsa 12000
+          authenticate:
+            # - key: "{{ vault_ospf_auth}}"
+            #   area: "0.0.0.0"
+          interfaces:
+            - Ethernet45.11
+          area:
+            - id: "0.0.0.11"
+              type: "nssa"
+          network:
+            - id: "10.80.5.34/31"
+              area: "0.0.0.11"
+          aggregate:
+            # - area: "0.0.0.12"
+            #   supernet: "172.17.0.0/16"
+          redis: 
+            - r_map:
+              proto: bgp
+            - r_map:
+              proto: connected
+        bgp:
+          attributes:
+          peers:
+            - 
+              addr: "{{ v101_netv4 | ansible.utils.ipaddr(1+rack_no|int) | ansible.utils.ipaddr('address') }}"
+              desc: "IXIA Peer v4"
+              remote_as: 
+              peer_group: "tester_v4"
+            - 
+              addr: "{{ v101_netv6 | ansible.utils.ipaddr(1+rack_no|int) | ansible.utils.ipaddr('address') }}"
+              desc: "IXIA Peer v6"
+              remote_as: 
+              peer_group: "tester_v6"
+          redistribute:
+          - 
+              afi: ipv4
+              proto: connected
+              r_map: 
+          - 
+              afi: ipv4
+              proto: "ospf match internal"
+              r_map: redistribute-default-route
+          - 
+              afi: ipv4
+              proto: "ospf match external"
+              r_map: redistribute-default-route
+          - 
+              afi: ipv4
+              proto: "ospf match nssa-external"
+              r_map: redistribute-default-route
+        multicast:
+          - type: ipv4
+            l3_group: "225.0.0.100"
+            attributes:
+              - routing
+        pim:
+          - mode: sparse-mode
+            type: ipv4
+            rps:
+            - addr: 10.80.1.31
+              groups: 
+              - "access-list MCAST-SM1"
+            # interfaces:
+            # - name: vlan701
+            #   mode: "sparse-mode"
+            #   attributes:
+            #   - "hello interval 1"
+            attributes:
+    - 
+        name: "IOT-subnet"
+        desc: "IOT VRF2"
+        rd_pfx: "{{ lpbk_olay.addr_v4 }}"
+        rt_pfx: "1002"
+        l3_vni: 
+          id: "50054"
+          vlan: "902"
+        lpbks:
+        - 
+            name: "loopback201"
+            desc: "Loopback Interface"
+            addr_v4: "10.99.22.{{ seq }}/32"
+            addr_v6: "2001:fff2:fff2::{{ '%0x' % seq }}/128"
+        ospf:
+          daemon_id: 12
+          attributes:
+            - auto-cost reference-bandwidth 100000
+            - distance ospf external 205
+            - passive-interface default
+            - max-lsa 12000
+          authenticate:
+            # - key: "{{ vault_ospf_auth}}"
+            #   area: "0.0.0.0"
+          interfaces:
+            - Ethernet45.12
+          area:
+            - id: "0.0.0.12"
+              type: "nssa"
+          network:
+            - id: "10.80.5.38/31"
+              area: "0.0.0.12"
+          aggregate:
+            # - area: "0.0.0.12"
+            #   supernet: "172.17.0.0/16"
+          redis: 
+            - r_map: "subnet-from-IOT-vrf"
+              proto: bgp
+            - r_map:
+              proto: connected
+        bgp:
+          attributes:         ## list definition
+          redistribute:
+          - 
+              afi: ipv4
+              proto: connected
+              r_map: 
+          - 
+              afi: ipv4
+              proto: "ospf match internal"
+              r_map: redistribute-default-route
+          - 
+              afi: ipv4
+              proto: "ospf match external"
+              r_map: redistribute-default-route
+          - 
+              afi: ipv4
+              proto: "ospf match nssa-external"
+              r_map: redistribute-default-route
+        multicast:
+          - type: ipv4
+            attributes:
+              - routing
+        pim:
+          - mode: sparse-mode
+            type: ipv4
+            rps:
+            - addr: 10.80.2.31
+              groups: 
+              - "access-list MCAST-SM2"
+            attributes:
+          # - 
+          #     afi: ipv4
+          #     r_map: 
+          #     proto: bgp
+    - 
+        name: "campus-subnet"
+        desc: "Campus VRF3"
+        rd_pfx: "{{ lpbk_olay.addr_v4 }}"
+        rt_pfx: "1003"
+        l3_vni: 
+          id: "50055"
+          vlan: "903"
+        lpbks:
+        - 
+            name: "loopback301"
+            desc: "Loopback Interface"
+            addr_v4: "10.99.33.{{ seq }}/32"
+            addr_v6: "2001:fff3:fff3::{{ '%0x' % seq }}/128"
+        ospf:
+          daemon_id: 13
+          attributes:
+            - auto-cost reference-bandwidth 100000
+            - distance ospf external 205
+            - passive-interface default
+            - max-lsa 12000
+          authenticate:
+            # - key: "{{ vault_ospf_auth}}"
+            #   area: "0.0.0.0"
+          interfaces:
+            - Ethernet45.13
+          area:
+            - id: "0.0.0.13"
+              type: "nssa"
+          network:
+            - id: "10.80.5.58/31"
+              area: "0.0.0.13"
+          aggregate:
+            # - area: "0.0.0.12"
+            #   supernet: "172.17.0.0/16"
+          redis: 
+            - r_map: "subnet-from-BMS-vrf"
+              proto: bgp
+            - r_map:
+              proto: connected
+        bgp:
+          attributes:         ## list definition
+          redistribute:
+          - 
+              afi: ipv4
+              proto: connected
+              r_map: 
+          - 
+              afi: ipv4
+              proto: "ospf match internal"
+              r_map: redistribute-default-route
+          - 
+              afi: ipv4
+              proto: "ospf match external"
+              r_map: redistribute-default-route
+          - 
+              afi: ipv4
+              proto: "ospf match nssa-external"
+              r_map: redistribute-default-route
+        multicast:
+          - type: ipv4
+            attributes:
+              - routing
+        pim:
+          - mode: sparse-mode
+            type: ipv4
+            rps:
+            - addr: 10.80.0.31
+              groups: 
+              - "access-list MCAST-SM3"
+            attributes:
+## EVPN iBGP Overlay
+## Bleaves pair as iBGP RRS, Rest VTEP leaf as RRC.
+evpn_ibgp:
+  local_asn: "64999"
+  rrs_v4:
+    peer_group: "evpn_rrs_v4"
+    remote_as:
+      - "{{ rack03_asn }}"
+      - "{{ rack03_asn }}"
+    addr:
+      - "{{ hostvars['bleaf01']['lpbk_ulay']['addr_v4'] }}"
+      - "{{ hostvars['bleaf02']['lpbk_ulay']['addr_v4'] }}"
+  rrc_v4:
+    peer_group: "evpn_rrc_v4"
+    remote_as:
+      - "{{ rack01_asn }}"
+      - "{{ rack01_asn }}"
+      - "{{ rack02_asn }}"
+      - "{{ rack02_asn }}"
+    addr:
+      - "{{ hostvars['cleaf01']['lpbk_ulay']['addr_v4'] }}"
+      - "{{ hostvars['cleaf02']['lpbk_ulay']['addr_v4'] }}"
+      - "{{ hostvars['cleaf03']['lpbk_ulay']['addr_v4'] }}"
+      - "{{ hostvars['cleaf04']['lpbk_ulay']['addr_v4'] }}"
+  peer_v4:
+    peer_group: "evpn_rrp_v4"

@@ -1,0 +1,19 @@
+{##################################################
+
+Purpose:
+Generating BGP Dual-Stack Underlay Configuration
+###################################################}
+router bgp {{ bgp.local_as }}
+  address-family flow-spec ipv4
+    neighbor fabric_peer_v4 activate
+    neighbor tor_peer_v4 activate
+    neighbor sas_peer_v4 activate
+  !
+  address-family flow-spec ipv6
+    neighbor fabric_peer_v6 activate
+    neighbor tor_peer_v6 activate
+    neighbor sas_peer_v6 activate
+  !
+!
+
+

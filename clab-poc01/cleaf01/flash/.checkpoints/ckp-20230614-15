@@ -1,0 +1,106 @@
+! The checkpoint file saved at Wed Jun 14 01:19:53 2023 by admin
+! device: cleaf01 (cEOSLab, EOS-4.28.4M-29408825.4284M (engineering build))
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret sha512 $6$I075OKmRYi8Enpfs$WBNpZvnrCbK475z/vHBgktyASRaT9uh7WOxKypNzPLDOatWQ5fLgpus/EHkxm7HnCJKvOsoiKKDupGfRYa1Rh.
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname cleaf01
+!
+spanning-tree mode mstp
+!
+vrf instance MGMT
+!
+management api http-commands
+   no shutdown
+!
+management api gnmi
+   transport grpc default
+      vrf MGMT
+!
+management api netconf
+   transport ssh default
+      vrf MGMT
+!
+interface Ethernet1
+!
+interface Ethernet2
+!
+interface Ethernet12
+!
+interface Ethernet27
+!
+interface Ethernet28
+!
+interface Ethernet31
+!
+interface Ethernet32
+!
+interface Management0
+   vrf MGMT
+   ip address 172.100.100.2/24
+!
+interface Vlan101
+!
+interface Vlan201
+!
+ipv6 access-list copp_v6
+   10 permit ipv6 2607:f600:1000:1011::/64 any
+   20 permit ipv6 2607:f600:1000:1211::/64 any
+   30 permit ipv6 any any
+!
+ip access-list copp_v4
+   10 permit ip 10.10.11.0/24 any
+   20 permit tcp any eq ssh any eq 2 ack
+   30 permit ip any any
+!
+ip access-list edge_inbound_v4
+   10 remark $Id:$
+   20 remark Server network ingress ACL to be applied to gateway vlan interface
+   30 remark accept-dhcp
+   40 remark Optional - allow forwarding of DHCP requests.
+   50 permit udp any any eq bootps
+   60 permit udp any any eq bootpc
+   70 remark accept-to-dns
+   80 remark Allow name resolution
+   90 permit udp any eq domain 200.200.99.0/24
+   100 remark accept-tcp-replies
+   110 remark Allow tcp replies to internal hosts.
+   120 permit tcp any 200.200.99.0/24 established
+   130 remark deny-to-internal
+   140 remark Deny access to rfc1918/internal.
+   150 deny ip any 10.0.0.0/8
+   160 deny ip any 172.16.0.0/12
+   170 deny ip any 192.168.0.0/16
+   180 remark deny-to-bogons
+   190 remark Deny access to bogons
+   200 deny ip any 0.0.0.0/8
+   210 deny ip any 192.0.0.0/24
+   220 deny ip any 192.0.2.0/24
+   230 deny ip any 198.18.0.0/15
+   240 deny ip any 198.51.100.0/24
+   250 deny ip any 203.0.113.0/24
+   260 deny ip any 224.0.0.0/4
+   270 deny ip any 240.0.0.0/4
+   280 remark default-permit
+   290 remark Allow what's left (internet)
+   300 permit ip any any
+!
+no ip routing
+no ip routing vrf MGMT
+!
+mac access-list MAC_Filter_v1
+   10 permit any any
+   20 deny any any
+!
+system control-plane
+   ip access-group copp_v4 in
+   ipv6 access-group copp_v6 in
+!
+ip route vrf MGMT 0.0.0.0/0 172.100.100.1
+!
+end

@@ -1,0 +1,9 @@
+edge_isp: "zayo"
+
+edge_seq: "{{ xconn_v4 | json_query('[?pointa==`edge2` && pointb==`dc-gw02`].seq') | first }}"
+edge_netmaskv4: "{{ xconn_v4 | json_query('[?pointa==`edge2` && pointb==`dc-gw02`].netmask') | first }}"
+edge_netmaskv6: "{{ xconn_v6 | json_query('[?pointa==`edge2` && pointb==`dc-gw02`].netmask') | first }}"
+edge_netv4: "{{ xconn_v4 | json_query('[?pointa==`edge2` && pointb==`dc-gw02`].net') | first }}"
+edge_netv6: "{{ xconn_v6 | json_query('[?pointa==`edge2` && pointb==`dc-gw02`].net') | first }}"
+
+remote_isp_asn: "{{ isp_asn | json_query('[?name==`zayo`].id') | first }}"

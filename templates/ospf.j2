@@ -1,0 +1,52 @@
+{##################################################
+
+Purpose:
+Generating OSPF Underlay Configuration
+###################################################}
+{% if ospf is defined and ospf %}
+{% if ospf.daemon_id is defined and ospf.daemon_id %}
+router ospf {{ ospf.daemon_id }}
+{% else %}
+router ospf
+{% endif %}
+ log-adjacency-changes
+ router-id {{ lpbk_ulay.addr_v4}}
+{% for attri in ospf.attributes %}
+ {{ attri }}
+{% endfor %}
+{% if ospf.redis is defined and ospf.redis %}
+{% for redis in ospf.redis %}
+{% if redis.r_map %}
+ redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+ redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if ospf.authenticate is defined and ospf.authenticate %}
+{% for auth in ospf.authenticate %}
+ area {{ auth.area }} authentication
+{% endfor %}
+{% endif %}
+{% if ospf.area is defined and ospf.area %}
+{% for area in ospf.area %}
+ area {{ area.id }} {{ area.type }}
+{% endfor %}
+{% endif %}
+{% if ospf.interfaces is defined and ospf.interfaces %}
+{% for intf in ospf.interfaces %}
+ no passive-interface {{ intf }}
+{% endfor %}
+{% endif %}
+{% if ospf.aggregate is defined and ospf.aggregate %}
+{% for aggr in ospf.aggregate %}
+ area {{ aggr.area }} range {{ aggr.supernet }}
+{% endfor %}
+{% endif %}
+{% if ospf.network is defined and ospf.network %}
+{% for network in ospf.network %}
+ network {{ network.id }} area {{ network.area }}
+{% endfor %}
+{% endif %}
+exit
+{% endif %}

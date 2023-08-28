@@ -1,0 +1,59 @@
+{###########################################
+
+Purpose:
+Generating MLAG Configuration
+############################################}
+{% if port_channel is defined and port_channel %}
+{% for bond in port_channel %}
+interface Port-Channel{{ bond.bond_id }}
+ description "{{ bond.desc }} {{ bond.bond_id }}"
+ mtu {{ phy_mtu }}
+{% if bond.type == "l2" %}
+ switchport mode trunk
+{% if bond.vlan_list is defined and bond.vlan_list %}
+ switchport trunk allowed vlan {{ bond.vlan_list|join(",") }}
+{% endif %}
+ switchport
+{% endif %}
+ port-channel lacp fallback individual
+ port-channel lacp fallback timeout 1
+{% if bond.mlag_id is defined and bond.mlag_id %}
+ mlag {{ bond.mlag_id }}
+{% endif %}
+{% if bond.esi_id is defined and bond.esi_id %}
+ !
+ evpn ethernet-segment
+   identifier {{ bond.esi_id }}
+   route-target import {{ bond.esi_rt}}
+{% set esid = bond.esi_id.split(':') %}
+ lacp system-id {{ esid[2]}}.{{ esid[3]}}.{{ esid[4]}}
+{% endif %}
+ no shutdown
+!
+{% if port_channel.bmem_range is defined and port_channel.bmem_range %}
+{% set member = port_channel.bmem_range[i-1] %}
+interface range Eth{{ member }}
+ description "{{ bond.desc }} {{ bond.bond_id }} member"
+ mtu {{ phy_mtu }}
+ load-interval 30
+ channel-group {{ bond.bond_id }} mode active
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+!
+{% endif %}
+{% if bond.bmem_indiv is defined and bond.bmem_indiv %}
+{% for member in bond.bmem_indiv %}
+interface Eth{{ member }}
+ description "{{ bond.desc }} {{ bond.bond_id }} member"
+ mtu {{ phy_mtu }}
+ load-interval 30
+ channel-group {{ bond.bond_id }} mode active
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+!
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}

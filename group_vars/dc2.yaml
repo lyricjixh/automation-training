@@ -1,0 +1,484 @@
+---
+# Location:
+country: "USA"
+state: "CA"
+city: "Santa Clara"
+site-id: "DC02"
+
+#Services
+mgmt_vrf: "management"
+mgmt_intf: "1"
+
+domain:
+    name: "ca.aexp.com"
+    vrf: "{{ mgmt_vrf }}"
+    server:
+        - "10.99.99.99"
+        - "10.99.99.100"
+timezone: "GMT0"
+ntp:
+    src_intf: "Management{{mgmt_intf}}" 
+    vrf: "{{ mgmt_vrf }}"
+    authenticate: "yes"
+    auth_key:
+      - seq: 2
+        type: "sha1"
+        text: "{{ vault_ntp_auth_key1 }}"
+      - seq: 23
+        type: "md5"
+        text: "{{ vault_ntp_auth_key2 }}"
+    trusted_key: 23
+    server:
+        - addr: "10.10.60.81"
+          prefer: "yes"
+          state: "present"
+        - addr: "10.10.60.82"
+          prefer: "no"
+          state: "present"
+        - addr: "10.10.60.83"
+          prefer: "no"
+          state: "present"
+
+log:
+    src_intf: "Management{{mgmt_intf}}" 
+    vrf: "{{ mgmt_vrf }}"
+    console: "no"
+    monitor: "no"
+    server:
+        - addr: "10.14.8.12"
+          port: "514"
+          protocol: "tcp"
+        - addr: "139.71.242.20"
+          port: "514"
+          protocol: "tcp"
+    trap: "critical"
+    sync: "yes"
+aaa:
+    authentication:
+      login: 
+      - local
+      - group tac_group1
+      - group radius_group1
+      enable:
+      # - local
+      # - group tac_group1
+      # - group radius_group1
+    authorization: 
+      commands:         ##for shell commands
+      - local
+      config-commands:  ##for config commands
+      exec:             ##for starting shell
+      - local
+      - group tac_group1
+      - group radius_group1
+    accounting:
+      commands:         ##for shell commands
+      # - group tac_group1
+      exec:             ##for starting shell
+      # - group tac_group1
+      system:           ##for starting shell
+      # - group tac_group1
+
+aaa_tac:
+    timeout: "15" 
+    vrf: "{{ mgmt_vrf }}"
+    src_intf: "Management{{mgmt_intf}}"
+    group:
+      - name: "tac_group1"
+        server:
+            - addr: "1.1.1.1"
+              key: "{{ vault_tac_key }}"
+            - addr: "1.1.1.2"
+              key: "{{ vault_tac_key }}"
+      - name: "tac_group2"
+        server:
+            - addr: "2.1.1.1"
+              key: "{{ vault_tac_key }}"
+            - addr: "2.1.1.2"
+              key: "{{ vault_tac_key }}"
+
+aaa_radius:
+    timeout: "15" 
+    vrf: "{{ mgmt_vrf }}"
+    group:
+      - name: "radius_group1"
+        server:
+            - addr: "1.1.1.1"
+              key: "{{ vault_radius_key }}"
+            - addr: "1.1.1.2"
+              key: "{{ vault_radius_key }}"
+      - name: "radius_group2"
+        server:
+            - addr: "2.1.1.1"
+              key: "{{ vault_radius_key }}"
+            - addr: "2.1.1.2"
+              key: "{{ vault_radius_key }}"
+
+snmp:
+    vrf: "{{ mgmt_vrf }}"
+    src_intf: "Management{{mgmt_intf}}"
+    contact: "netadmin@aexp.com, contact 602-766-3000"
+    proto_port: "1161"    ## leave blank for default 161
+    location: "E3:CAN-TOR-029:FABRIC:CC:24X7:Sheperd:001:A04"
+    view:
+      - name: "globalView"
+        oid: "1.3.6.1"
+        action: "include"
+      - name: "view_01"
+        oid: "1.3.6.1.2"
+        action: "include"
+      - name: "view_02"
+        oid: "1.3.6.1.2"
+        action: "include"
+    group:
+      - name: "admin01"
+        version: "2c"
+        views:
+        - "read globalview"
+        - "write view_01"
+        - "notify view_02"
+      - name: "admin02"
+        version: "3"
+        auth: "auth"    ##[auth|noauth|priv]
+        views:
+        - "read globalview"
+        - "write view_01"
+        - "notify view_02"
+    user:
+      - name: "cvpadmin"
+        group: "admin01"
+        version: "3"
+        password: "{{ vault_snmp_labadmin_auth }}"
+        auth: "sha"
+        encry: "aes"
+      - name: "tac"
+        version: "3"
+        group: "admin02"
+        password: "{{ vault_snmp_labadmin_auth }}"
+        auth: "md5"
+        encry: "aes"
+    traps:
+      - category: "bgp"
+        type:
+          - established
+          - backward-transition
+      - category: "ospf"
+        type:
+          - if-state-change
+          - nbr-state-change
+      - category: "capacity"
+        type:
+          - arista-hardware-utilization-alert
+      - category: "entity"
+        type:
+          - arista-ent-sensor-alarm
+          - ent-config-change
+          - ent-state-oper-enabled
+      - category: "snmpConfigManEvent"
+        type:
+      - category: "switchover"
+        type:
+      - category: "vrrp"
+        type:
+          - trap-new-master
+    host:
+        - addr: "148.171.161.70"
+          version: "2c"
+          community: "{{ vault_snmp_comm_ro }}"
+          vrf: "{{ mgmt_vrf }}"
+        - addr: "148.171.54.9"
+          version: "3"
+          user: "netops"
+          auth: "auth"
+          vrf: "{{ mgmt_vrf }}"
+    community:
+        - name: "community_ro"
+          string: "{{ vault_snmp_comm_ro }}"
+          priv: "ro"
+          acl: "gnoc_ro"
+          group: "admin01"
+        - name: "community_rw"
+          string: "{{ vault_snmp_comm_rw }}"
+          priv: "rw"
+          acl: "gnoc_ro"
+          group: "admin02"
+
+stp:
+    mode: "rapid-pvst"
+    attributes:
+      - "edge-port bpduguard default"
+      - "guard loop default"
+    priority: "8192"
+    vlan:
+        - id: "3939"
+          priority: "8192"
+
+sflow:
+  sflow_enable: "true"
+  vrf: "{{ mgmt_vrf }}"
+  src_intf: "Management{{mgmt_intf}}"
+  collector:
+    - collector_ip: "148.171.54.50"
+      udp_port: 9995
+      state: present
+    - collector_ip: "172.100.99.99"
+      udp_port: 6343
+      state: present
+  polling_interval:
+  sample_rate: 16384
+  bgp: 'Enabled'
+  port: "{{ sflow_port_sku }}"
+
+span: "{{ span_sku }}"
+
+telemetry:
+  transport:
+    -
+      type: "grpc"
+      name: "cust_def"
+      port: 
+      vrf:
+      state: "enable"
+  eapi: 
+    - 
+      type: "http-commands"
+      proto: "http"
+      state: "enable"
+  auth:
+    - password
+    - jwt
+    - cert
+    - none
+
+vrli_vip: 10.60.97.44
+no_helper: null
+helper_ip: 10.60.97.254
+
+users:
+# no including ansible user
+  - name: "lab" 
+    passwd: "{{ vault_lab_password }}"
+    role: "sysadmin"
+    priv: 15
+
+  - name: "ansible"
+    passwd: "{{ vault_ansible_password }}"
+    role: "sysadmin"
+    priv: 15
+
+  - name: "netops" 
+    passwd: "{{ vault_netops_password }}"
+    role: "network-admin"
+    priv: 15
+
+oob_ipv4_mask: 24
+oob_netv4: 172.100.100.0/24
+oob_netv4_gw: 172.100.100.1
+
+lpbk_ulay_id: "0"
+lpbk_ulay_netv4: "10.216.199.0/24"
+lpbk_ulay_netv6: "2001::/64"
+
+lpbk_olay_id: "1"
+lpbk_olay_netv4: "10.111.252.0/24"
+lpbk_olay_netv6: "2001:6f:fc::/64"
+
+compute_lpbk_netv4: "10.99.0.0/24"
+compute_lpbk_netv6: "2001:63::/64"
+
+fabric_ptp_netmaskv4: 31
+fabric_ptp_netmaskv6: 127
+fabric_ptp_netv4: "10.216.197.0/24"
+fabric_ptp_netv6: "2001:1000::/64"
+
+evpn_anycast_vmac: 00:00:00:aa:aa:aa
+
+mlag_ctl_netv4: "10.253.{{rack_no}}.0/30"
+mlag_ctl_netv6: "2001:fd:{{rack_no}}::/126"
+
+tor_pair_netmaskv4: 31
+tor_pair_netv4: "10.10.{{rack_no}}.0/30"
+tor_pair_netv6: "2001:a:{{rack_no}}::/126"
+#vlt_mac: 00:00:00:{{rack_no}}{{rack_no}}:{{rack_no}}{{rack_no}}:{{rack_no}}{{rack_no}}
+tor_pair_vmac: 00:00:00:{{rack_no}}{{rack_no}}:{{rack_no}}{{rack_no}}:{{rack_no}}{{rack_no}}
+
+subvlan_netv4: "10.80.5.0/24"
+subvlan_netmaskv4: 31
+subvlan_netv6: "2001:11:1::/120"
+subvlan_netmaskv6: 127
+
+v101_netv4: "10.101.1.0/27"
+v101_netv6: "2001:101:1::/120"
+v101_mcast: "225.0.1.1"
+v101_helper: [10.11.1.1, 10.11.1.2]
+
+v102_netv4: "10.102.1.0/27"
+v102_netv6: "2001:102:1::/120"
+v102_mcast: "225.0.1.2"
+v102_helper: [10.11.1.1, 10.11.1.2]
+
+v103_netv4: "10.103.1.0/27"
+v103_netv6: "2001:103:1::/120"
+v103_mcast: "225.0.1.3"
+v103_helper: [10.11.1.1, 10.11.1.2]
+
+v104_netv4: "10.104.1.0/27"
+v104_netv6: "2001:104:1::/120"
+v104_mcast: "225.0.1.4"
+v104_helper: [10.11.1.1, 10.11.1.2]
+
+v141_netv4: "10.141.{{ rack_no }}.0/24"
+v141_netv6: "2001:2001:141:{{ rack_no }}::/64"
+v141_mcast: "225.0.1.41"
+v141_helper: [10.11.1.1, 10.11.1.2]
+
+v142_netv4: "10.142.{{ rack_no }}.0/24"
+v142_netv6: "2001:2001:142:{{ rack_no }}::/64"
+v142_mcast: "225.0.1.42"
+v142_helper: [10.11.1.1, 10.11.1.2]
+
+v201_netv4: "10.201.1.0/27"
+v201_netv6: "2001:201:1::/120"
+v201_mcast: "225.0.2.1"
+v201_helper: [10.11.1.1, 10.11.1.2]
+
+v202_netv4: "10.202.1.0/27"
+v202_netv6: "2001:202:1::/120"
+v202_mcast: "225.0.2.2"
+v202_helper: [10.11.1.1, 10.11.1.2]
+
+v204_netv4: "10.204.2.0/27"
+v204_netv6: "2001:204:1::/120"
+v204_mcast: "225.0.2.4"
+v204_helper: [10.11.1.1, 10.11.1.2]
+
+v301_netv4: "10.100.3.0/27"
+v301_netv6: "2001:100:3::/120"
+v301_mcast: "225.0.3.1"
+v301_helper: [10.11.1.1, 10.11.1.2]
+
+
+## Not Shared Edge Subnet on Edge
+edge_netmaskv4: 30
+edge_netmaskv6: 126
+edge_netv4: "10.99.1.0/24"
+edge_netv6: "2001:2001:99:1::/64"
+
+test_netmaskv4: 30
+test_netmaskv6: 126
+test_netv4: "10.100.199.0/24"
+test_netv6: "2001:2001:2001:c7::/124"
+test_route_netv4: "101.101.0.0/16"
+test_route_netv6: "2001:2001:101:101::/48"
+
+k8s_tor_netmaskv4: 24
+k8s_tor_netmaskv6: 64
+k8s_tor1_netv4: "{{ v141_netv4 }}"
+k8s_tor1_netv6: "{{ v141_netv6 }}"
+k8s_tor2_netv4: "{{ v142_netv4 }}"
+k8s_tor2_netv6: "{{ v142_netv6 }}"
+
+isp_lpbk_netv4:
+  cogent: "38.142.0.0/24"
+  zayo: "11.11.11.0/24"
+  centurylink: "12.11.11.0/24"
+  telia: "13.11.11.0/241299"
+  GTT: "14.11.11.0/243257"
+isp_lpbk_netv6:
+  cogent: "2001:550:2:61::/112"
+  zayo: "2001:1::/112"
+  centurylink: "2001:2::/112"
+  telia: "2001:3::/112"
+  GTT: "2001:4::/112"
+
+#BGP
+## Global ASN for FABRIC Edge VRF
+edge_asn: "12189"
+## Local ASN for FABRIC-CORE VRF
+core_asn: "46385"
+## Local ASN for SPINE VRF
+spine_asn: "4200000000"
+## ISP Peer ASN
+isp_asn:
+  -
+    name: "cogent"
+    id: "174"
+  -
+    name: "zayo"
+    id: "6461"
+  -
+    name: centurylink
+    id: "3356"
+  -
+    name: "telia"
+    id: "1299"
+  -
+    name: "GTT"
+    id: "3257"
+## Base No for Rack ASN Generation
+tester_asn: "1234"
+asn_base: 64516
+rack_tor_asn: "{{ asn_base+rack_no }}"
+rack01_asn: "{{ asn_base+1 }}"
+rack02_asn: "{{ asn_base+2 }}"
+rack03_asn: "{{ asn_base+3 }}"
+rack04_asn: "{{ asn_base+4 }}"
+
+# ospf Parameters
+ospf:
+  daemon_id: 10
+  attributes:
+    - auto-cost reference-bandwidth 100000
+    - distance ospf external 205
+    - passive-interface default
+  authenticate:
+    # - key: "{{ vault_ospf_auth}}"
+    #   area: "0.0.0.0"
+  interfaces: "{{ ospf_intf }}"
+  area:
+  network:
+    - id: "10.80.1.190/31"
+      area: "0.0.0.11"
+    - id: "10.80.2.0/31"
+      area: "0.0.0.0"
+  aggregate:
+    - area: "0.0.0.0"
+      supernet: "172.17.0.0/16"
+  redis: 
+    - r_map:
+      proto: bgp
+    - r_map:
+      proto: connected
+
+multicast:
+  - type: ipv4
+    attributes:
+      - routing
+      - multipath deterministic router-id
+      - software-forwarding sfe
+pim:
+  - mode: sparse-mode
+    type: ipv4
+    anycast_rps:
+    # - addr: 10.17.255.2
+    #   count: 15
+    #   routers:
+    #   - 10.1.1.14
+    #   - 10.1.2.14
+    #   - 10.1.3.14
+    rps:
+    - addr: 10.17.255.83
+      groups:
+    - addr: 10.21.18.23
+      groups: 
+      - "238.1.12.0/24"
+    attributes:
+    - ssm range standard
+    - make-before-break disabled
+    local_intf: "Loopback{{lpbk_ulay.id}}"
+    interfaces:
+      name: "{{ pim_intf }}"
+      state: "present"
+      mode: "sparse-mode"
+      attributes:
+      - "hello interval 1"

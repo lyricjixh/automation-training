@@ -1,0 +1,19 @@
+mlag configuration
+   peer-address 10.253.1.1
+!
+interface Loopback0
+  shutdown
+!
+interface Port-Channel101
+  no mlag 101
+!
+interface Ethernet31
+   ip address 10.216.197.0/31
+!
+router bgp 64517
+  no neighbor 10.216.197.0
+  no neighbor FABRIC-PEER_EVPN ebgp-multihop 3
+!
+interface Vxlan1
+   no vxlan source-interface Loopback1
+!

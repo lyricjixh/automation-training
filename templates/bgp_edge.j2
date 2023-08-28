@@ -1,0 +1,107 @@
+{##################################################
+
+Purpose:
+Generating BGP Dual-Stack Underlay Configuration
+###################################################}
+{% if edge_bgp is defined and edge_bgp %}
+router bgp {{ bgp.local_as }}
+{% if edge_bgp.peer_group is defined and edge_bgp.peer_group %}
+{% set pgroup_v4 = edge_bgp.peer_group | json_query('[?contains(afi,`ipv4`)].name') %}
+{% set pgroup_v6 = edge_bgp.peer_group | json_query('[?contains(afi,`ipv6`)].name') %}
+{% set pgroup_evpn = edge_bgp.peer_group | json_query('[?contains(afi,`evpn`)].name') %}
+{% for group in edge_bgp.peer_group %}
+  neighbor {{ group.name }} peer group
+  neighbor {{ group.name }} description "{{ group.desc }}"
+{% if group.remote_as is defined and group.remote_as %}
+  neighbor {{ group.name }} remote-as {{ group.remote_as }}
+{% endif %}
+{% if group.admin_state == "down" %}
+  neighbor {{ group.name }} shutdown
+{% endif %}
+{% if group.attributes is defined and group.attributes %}
+{% for attr in group.attributes %}
+  neighbor {{ group.name }} {{ attr }}
+{% endfor %}
+{% endif %}
+  !
+{% endfor %}
+{% endif %}
+  address-family ipv4
+{% if edge_bgp.afi.ipv4 is defined and edge_bgp.afi.ipv4 %}
+{% for redis in edge_bgp.afi.ipv4 %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if pgroup_v4 is defined and pgroup_v4 %}
+{% for group in pgroup_v4 %}
+    neighbor {{ group}} activate
+{% endfor %}
+{% endif %}
+  !
+  address-family ipv6
+{% if edge_bgp.afi.ipv6 is defined and edge_bgp.afi.ipv6 %}
+{% for redis in edge_bgp.afi.ipv6 %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if pgroup_v6 is defined and pgroup_v6 %}
+{% for group in pgroup_v6 %}
+    neighbor {{ group}} activate
+{% endfor %}
+{% endif %}
+  !
+  address-family evpn
+{% if edge_bgp.afi.evpn is defined and edge_bgp.afi.evpn %}
+{% for redis in edge_bgp.afi.evpn %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if pgroup_evpn is defined and pgroup_evpn %}
+{% for group in pgroup_evpn %}
+    neighbor {{ group}} activate
+{% endfor %}
+{% endif %}
+{% if pgroup_v6 is defined and pgroup_v6 %}
+{% for group in pgroup_v6 %}
+    no neighbor {{ group}} activate
+{% endfor %}
+{% endif %}
+  !
+{% if edge_bgp.peers is defined and edge_bgp.peers %}
+{% for peer in edge_bgp.peers %}
+{% if peer.vrf is defined and peer.vrf %}
+  vrf {{ peer.vrf }}
+    neighbor {{ peer.addr }} description "{{ peer.desc }}"
+{% if peer.peer_group %}
+    neighbor {{ peer.addr }} peer group {{ peer.peer_group }}
+{% endif %}
+{% if peer.remote_as %}
+    neighbor {{ peer.addr }} remote-as {{ peer.remote_as }}
+{% endif %}
+  !
+{% else %}
+  neighbor {{ peer.addr }} description "{{ peer.desc }}"
+{% if peer.peer_group %}
+  neighbor {{ peer.addr }} peer group {{ peer.peer_group }}
+{% endif %}
+{% if peer.remote_as %}
+  neighbor {{ peer.addr }} remote-as {{ peer.remote_as }}
+{% endif %}
+  !
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% endif %}

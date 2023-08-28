@@ -1,0 +1,146 @@
+{###########################################
+
+Purpose:
+Generating ceos Vxlan Configuration
+############################################}
+{% if evpn is defined and evpn %}
+{# ip virtual-router mac-address mlag-peer #}
+ip virtual-router mac-address {{ evpn_anycast_vmac }}
+!
+{% for vrfi in evpn.vrf %}
+vrf instance {{ vrfi.name }}
+!
+ip routing vrf {{ vrfi.name }}
+ipv6 unicast-routing vrf {{ vrfi.name }}
+!
+{% if vrfi.lpbks is defined and vrfi.lpbks %}
+{% for intf in vrfi.lpbks %}
+interface {{ intf.name }}
+  description "VRF_{{ vrfi.name }} {{ intf.desc }}"
+  vrf {{ vrfi.name }}
+  no ip address
+  ip address {{ intf.addr_v4 }}
+{% if intf.addr_v6 is defined and intf.addr_v6 %}
+  no ipv6 address
+  ipv6 address {{ intf.addr_v6 }}
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% for vni in vxlans %}
+vlan {{ vni.vlan }}
+  name VLAN{{ vni.vlan }}
+!
+{% endfor %}
+interface vxlan1
+  vxlan source-interface Loopback{{ lpbk_olay.id }}
+  vxlan virtual-router encapsulation mac-address mlag-system-id
+{% for vni in vxlans %}
+  vxlan vlan {{ vni.vlan }} vni {{ vxlan_id_prx }}{{ vni.vlan }}
+{% if vni.mcast.l2_group is defined and vni.mcast.l2_group %}
+  vxlan vlan {{ vni.vlan }} multicast group {{ vni.mcast.l2_group }}
+{% endif %}
+{% endfor %}
+{% for vrfi in evpn.vrf %}
+{% if vrfi.name|lower != "default" %}
+  vxlan vrf {{ vrfi.name }} vni {{ vrfi.l3_vni.vlan }}
+{% endif %}
+{% if vrfi.multicast is defined and vrfi.multicast %}
+{% for mcast in vrfi.multicast %}
+{% if mcast.l3_group is defined and mcast.l3_group %}
+  vxlan vrf {{ vrfi.name }} multicast group {{ mcast.l3_group}}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+!
+{% for vni in vxlans %}
+interface Vlan {{ vni.vlan }}
+  description "{{ vni.desc }}"
+  vrf {{ vni.vrf }}
+{% if vni.mcast is defined and vni.mcast %}
+{% if vni.mcast.igmp %}
+  ip igmp
+{% endif %}
+  multicast ipv4 static
+{% if vni.mcast.local_intf %}
+  pim ipv4 local-interface {{ vni.mcast.local_intf }}
+{% endif %}
+{% if vni.mcast.pim_mode %}
+  pim ipv4 {{ vni.mcast.pim_mode }}
+{% endif %}
+{% if vni.mcast.pim_attri %}
+{% for attri in vni.mcast.pim_attri %}
+  pim ipv4 {{ attri }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if vni.netv4 is defined and vni.netv4 %}
+  ip address virtual {{ vni.netv4 | ansible.utils.ipaddr('1') }}
+{% endif %}
+{% if vni.netv6 is defined and vni.netv6 %}
+  ipv6 address virtual {{ vni.netv6 | ansible.utils.ipaddr('1') }}
+{% endif %}
+  mtu {{ vxlan_mtu }}
+!
+{% endfor %}
+{% if edge_links is defined and edge_links %}
+{% for intf in edge_links %}
+{% if intf.vlan is defined and intf.vlan %}
+vlan {{ intf.vlan }}
+  name VLAN{{ intf.vlan }}
+!
+{% endif %}
+{% endfor %}
+{% for intf in edge_links %}
+{% if intf.vlan is defined and intf.vlan %}
+interface Vlan {{ intf.vlan }}
+{% elif intf.l3_port is defined and intf.l3_port %}
+interface ethernet{{ intf.l3_port }}
+{% endif %}
+ description "{{ intf.desc }}"
+ no switchport
+{% if intf.vrf is defined and intf.vrf %}
+ vrf {{ intf.vrf }}
+{% endif %}
+{% if intf.mcast is defined and intf.mcast %}
+{% if intf.mcast.igmp %}
+ ip igmp
+{% endif %}
+ multicast ipv4 static
+{% if intf.mcast.local_intf %}
+ pim ipv4 local-interface {{ intf.mcast.local_intf }}
+{% endif %}
+{% if intf.mcast.pim_mode %}
+ pim ipv4 {{ intf.mcast.pim_mode }}
+{% endif %}
+{% if intf.mcast.pim_attri %}
+{% for attri in intf.mcast.pim_attri %}
+ pim ipv4 {{ attri }}
+{% endfor %}
+{% endif %}
+{% endif %}
+ ip address {{ intf.netv4 | ansible.utils.ipaddr('2') }}
+{% if intf.netv6 is defined and intf.netv6 %}
+ ipv6 address {{ intf.netv6 | ansible.utils.ipaddr('2') }}
+{% endif %}
+ mtu {{ phy_mtu }}
+ no shutdown
+!
+{% if intf.trunk_port is defined and intf.trunk_port %}
+{% for port in intf.trunk_port %}
+interface ethernet{{ port }}
+ description "{{ intf.desc }}-VLAN{{ intf.vlan }} Trunk"
+ mtu {{ phy_mtu }}
+ load-interval 30
+ switchport mode trunk
+ switchport trunk allowed vlan {{ intf.vlan }}
+ switchport
+ no shutdown
+!
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}

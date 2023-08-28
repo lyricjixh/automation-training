@@ -1,0 +1,15 @@
+{###########################################
+
+Purpose:
+Generating Syslog Configuration
+############################################}
+{% if strata_fib.flex_partition is defined and strata_fib.flex_partition %}
+{% set parti = strata_fib.flex_partition %}
+platform trident forwarding-table partition flexible exact-match {{parti.exact}} l2-shared {{parti.l2}} l3-shared {{parti.l3}} alpm {{parti.alpm}}
+{% endif %}
+{% if strata_fib.partition is defined and strata_fib.partition %}
+platform trident forwarding-table partition {{strata_fib.partition}}
+{% endif %}
+{% if strata_rib.partition is defined and strata_rib.partition %}
+platform trident routing-table partition {{strata_rib.partition}}
+{% endif %}

@@ -1,0 +1,691 @@
+---
+ansible_network_os: arista.eos.eos
+ansible_httpapi_use_ssl: true
+ansible_httpapi_validate_certs: false
+ansible_connection: network_cli
+
+ansible_ssh_user: admin
+ansible_ssh_pass: "{{vault_ceos_password}}"
+ansible_become: yes
+ansible_become_method: sudo
+ansible_become_pass: "{{ vault_ceos_password }}"
+ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+# Loopback Interface, leaf/spine Globally
+lpbk_ulay:
+    id: "{{ lpbk_ulay_id }}"
+    desc: "Underlay Loopback"
+    addr_v4: "{{ lpbk_ulay_netv4 | ansible.utils.ipaddr(seq) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ lpbk_ulay_netv6 | ansible.utils.ipaddr(seq) | ansible.utils.ipaddr('address') }}"
+
+phy_mtu: 9214
+vxlan_mtu: "9100"
+
+features:
+    debian: 
+        hostname: "no"
+        sudoer: "yes"
+        user: "yes"
+        motd: "yes"
+        banner: "yes"
+        locale: "yes"
+        timezone: "yes"
+        syslog: "no"
+        ntp: "no"
+        frr: "no"
+    oob: "yes"
+    netserv:
+        domain: "yes"
+        ntp: "yes"
+        syslog: "yes"
+        snmp: "yes"
+        aaa: "no"
+        radius: "no"
+        tacacs: "yes"
+        user: "yes"
+        telemetry: "yes"
+        sflow: "yes"
+        span: "no"
+    interface:
+        standard_name: "yes"
+        breakout: "yes"
+        layer3: "yes"
+        vlan: "yes"
+        stp: "yes"
+        mlag: "yes"
+        l2port: "no"
+        bond: "yes"
+        vrrp: "yes"
+        ufd: "no"
+    routing:
+        policy: "yes"
+        bgp_stan: "yes"
+        bgp_unno: "no"
+        flowspec: "no"
+        ospf: "yes"
+        multicast: "yes"
+        pim: "yes"
+    overlay:
+        evpn: "yes"
+        uni_bgp: "yes"   ## uni_bgp (unified bgp) and ibgp are exclusive in overlay
+        ibgp: "no"       ## uni_bgp (unified bgp) and ibgp are exclusive in overlay
+        static_vxlan: "no"
+        multicast: "yes"
+        pim: "yes"        
+    security:
+        acl: "no"
+        copp: "no"
+        intf: "no"
+
+policy:
+    comm_list:
+        -
+            name: "COMM_PE_EDGE"
+            permit:
+                - "{{ rack_tor_asn }}:10101"
+                - "{{ rack_tor_asn }}:10201"
+                - "{{ rack_tor_asn }}:10301"
+            deny:
+        -
+            name: "COMM_EVPN_PE"
+            permit:
+                - "{{ edge_asn }}:9000"
+                - "65100:9001"
+                - "65100:9002"
+            deny:
+        -
+            name: "COMM_LOCAL_ROUTE"
+            permit:
+                - "{{ edge_asn }}:{{ edge_asn }}"
+            deny:
+    as_path:
+        -
+            name: "400"
+            path:
+                - "^$"
+        -
+            name: "local"
+            path:
+                - "^$"
+        -
+            name: "traverse"
+            path:
+                - "_{{ spine_asn }}_"
+                - "_{{ rack01_asn }}_"
+                - "_{{ rack02_asn }}_"
+                - "_{{ rack03_asn }}_"
+                - "_{{ rack04_asn }}_"
+        -
+            name: "local_orig"
+            path:
+                - "^$"
+    prefix_list:
+        -
+            name: "PFX_V4_CONNECTED"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ lpbk_ulay_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ lpbk_olay_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ fabric_ptp_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ edge_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v101_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v104_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v141_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v142_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v201_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v204_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ v301_netv4 }} le 32"
+        -
+            name: "PFX_V6_CONNECTED"
+            afi: "ipv6"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ lpbk_ulay_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ lpbk_olay_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ edge_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v101_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v104_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v141_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v142_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v201_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v204_netv6 }} le 128"
+                -
+                    action: "permit"
+                    range: "{{ v301_netv6 }} le 128"
+        -
+            name: "V4-NH"
+            afi: "ipv4"
+            step: 5
+            prefix:
+                -
+                    action: "permit"
+                    range: "192.16.1.0/24 le 32"
+                -
+                    action: "permit"
+                    range: "24.127.1.0/24 le 32"
+        -
+            name: "FABRIC_PTP_V4"
+            afi: "ipv4"
+            step: 5
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ fabric_ptp_netv4 }} le 32"
+        -
+            name: "FABRIC_PTP_V6"
+            afi: "ipv6"
+            step: 5
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ fabric_ptp_netv6 }} le 128"
+        -
+            name: "NO_ARP_PROXY"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "deny"
+                    range: "0.0.0.0/32"
+                -
+                    action: "deny"
+                    range: "{{ v101_netv4 }} le 32"
+                -
+                    action: "deny"
+                    range: "{{ v201_netv4 }} le 32"
+        -
+            name: "PFX_LEAK_ROUTE_DEFAULT"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ lpbk_ulay_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ fabric_ptp_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ edge_netv4 }} le 32"
+        -
+            name: "PFX_LEAK_ROUTE_RED"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ v101_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "0.0.0.0/0 le 32"
+        -
+            name: "00000_1a2b-smallerprefixes"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ v101_netv4 }} le 32"
+        -
+            name: "BOGON"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "10.0.0.0/8 le 32"
+                -
+                    action: "permit"
+                    range: "127.0.0.0/8 le 32"
+                -
+                    action: "permit"
+                    range: "169.254.0.0/16 le 32"
+                -
+                    action: "permit"
+                    range: "172.16.0.0/12 le 32"
+                -
+                    action: "permit"
+                    range: "192.0.0.0/24 le 32"
+                -
+                    action: "permit"
+                    range: "192.0.2.0/24 le 32"
+        -
+            name: "DEFAULT-ONLY"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "0.0.0.0/0"
+        -
+            name: "LP_INCREASE"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ v101_netv4 }} le 32"
+        -
+            name: "BMS-subnet-tenant"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ v101_netv4 }} le 32"
+        -
+            name: "deny-connected"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ fabric_ptp_netv4 }} le 32"
+        -
+            name: "loopback_v4"
+            afi: "ipv4"
+            step: 10
+            prefix:
+                -
+                    action: "permit"
+                    range: "{{ lpbk_ulay_netv4 }} le 32"
+                -
+                    action: "permit"
+                    range: "{{ lpbk_olay_netv4 }} le 32"
+
+    route_map:
+        -
+            name: "LOCAL_CONNECTED_V4"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "PFX_V4_CONNECTED"
+                    action:
+                        type: "community community-list"
+                        object: "COMM_LOCAL_ROUTE"
+                -
+                    allow: "permit"
+                    type: "community"
+                    object: "COMM_EVPN_PE"
+                    action:
+        -
+            name: "LOCAL-LOOPBACK-V6"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ipv6 address prefix-list"
+                    object: "PFX_V6_CONNECTED"
+                    action:
+                        type: "community community-list"
+                        object: "COMM_LOCAL_ROUTE"
+        -
+            name: "drain_ingress_tfk"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type:
+                    object: 
+                    action:
+                        type: "as-path prepend"
+                        object: "{{ rack_tor_asn }} repeat 3"
+        -
+            name: "drain_egress_tfk"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: 
+                    object: 
+                    action:
+                        type: "local-preference"
+                        object: "90"
+        -
+            name: "EVPN_EXPORT"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "as-path"
+                    object: "local_orig"
+                    action:
+        -
+            name: "SET_NH_V6"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: 
+                    object:
+                    action:
+                        type: "ipv6 next-hop"
+                        object: "2001:2001::1"
+        -
+            name: "BGP-VRF-LEAK-OUT-DEFAULT"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "PFX_LEAK_ROUTE_DEFAULT"
+                    action:
+        -
+            name: "BGP-VRF-LEAK-OUT-RED"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "PFX_LEAK_ROUTE_RED"
+                    action:
+        -
+            name: "DEFAULT-ONLY-CUSTOMERS-OUT"
+            step: 10
+            rule:
+                -
+                    allow: "deny"
+                    type: "ip address prefix-list"
+                    object: "BOGON"
+                    action:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "DEFAULT-ONLY"
+                    action:
+        -
+            name: "NO-SEND-CUSTOMERS-OUT"
+            step: 10
+            rule:
+                -
+                    allow: "deny"
+                    type: 
+                    object:
+                    action:
+        -
+            name: "REDIST-LOOPBACK-V4"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "loopback_v4"
+                    action:
+                -
+                    allow: "deny"
+                    type: "ip address prefix-list"
+                    object: "deny-connected"
+                    action:
+                -
+                    allow: "permit"
+                    type:
+                    object:
+                    action:
+        -
+            name: "BMS-subnet-IGP"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "as-path"
+                    object: "local"
+                    action:
+                        type: "community"
+                        object: "no-export"
+        -
+            name: "BMS-subnet-TENANT"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "BMS-subnet-tenant"
+                    action:
+        -
+            name: "SEND-COMMUNITY"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "ip address prefix-list"
+                    object: "LP_INCREASE"
+                    action:
+                        type: "community"
+                        object: "65534:10"
+                -
+                    allow: "permit"
+                    type: 
+                    object:
+                    action:
+        -
+            name: "VCF-IGP-OUT"
+            step: 10
+            rule:
+                -
+                    allow: "permit"
+                    type: "as-path"
+                    object: "400"
+                    action:
+                        type: "community"
+                        object: "no-export"
+        
+    peer_filter:
+        -
+            name: "compute_asn_range"
+            step: 10
+            match:
+                - 
+                    range: "64101-64199"
+                    result: "accept"
+                -
+                    range: "64901-64999"
+                    result: "accept"
+        -
+            name: "spine_asn_range"
+            step: 10
+            match:
+                - 
+                    range: "12189"
+                    result: "accept"
+        -
+            name: "leaf_asn_range"
+            step: 10
+            match:
+                - 
+                    range: "65001-65999"
+                    result: "accept"
+        -
+            name: "all_asn_range"
+            step: 10
+            match:
+                - 
+                    range: "1-4294967295"
+                    result: "accept"
+
+acl_gen: "arista_edge.eacl"
+
+ceos_acl:
+  - name: copp_v4
+    copp:
+      state: present
+    type: ipv4
+    state: present
+    remark:
+    #   - description: OOB_Inbound_Filter
+    #     number: 5
+    #     state: absent
+    entries:
+      - number: 10
+        permit: true
+        protocol: ip
+        source: 10.10.11.0/24
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+      - number: 50
+        permit: true
+        protocol: tcp
+        source: any
+        destination: any 
+        src_condition: eq 22
+        dest_condition: eq 2 ack
+        other_options:
+        state: present
+      - number: 1000
+        permit: true
+        protocol: ip
+        source: any
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+    ingress:
+    egress:
+  - name: copp_v6
+    copp:
+      state: present
+    type: ipv6
+    state: present
+    remark:
+    #   - description: NOC-Priv-Mgmt-Net
+    #     number: 5
+    #     state: absent
+    entries:
+      - number: 10
+        permit: true
+        protocol: ipv6
+        source: 2607:f600:1000:1011::/64
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+      - number: 20
+        permit: true
+        protocol: ipv6
+        source: 2607:f600:1000:1211::/64
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+      - number: 1000
+        permit: true
+        protocol: ipv6
+        source: any
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+    ingress:
+    egress:
+  - name: "edge_inbound_v4"
+    type: ipv4
+    state: present
+    ingress:
+      - name: Vlan101
+        state: present
+      - name: Vlan201
+        state: present
+    egress:
+
+#   - name: "edge_inbound_v6"
+#     type: ipv6
+#     state: present
+#     ingress:
+#       - name: Vlan101
+#         state: present
+#       - name: Vlan201
+#         state: present
+#     egress:
+
+  - name: mac_filter
+    type: mac
+    state: present
+    remark:
+    entries:
+      - number: 10
+        permit: true
+        protocol:
+        source: 8c:47:be:66:c6:80 0.0.0
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+      - number: 20
+        permit: true
+        protocol:
+        source: 8c:47:be:00:00:00 0.0.0
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+      - number: 1000
+        permit: false
+        protocol:
+        source: any
+        destination: any 
+        src_condition:
+        dest_condition:
+        other_options:
+        state: present
+    ingress:
+      - name: eth12
+        state: absent
+    egress:
+
+ufd:
+  desc: "tracking_group"
+  grp_name: "ufd_grp"
+  timeout: 6
+  threshold_up: "50"
+  threshold_down: "50"

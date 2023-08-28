@@ -1,0 +1,26 @@
+{###########################################
+
+Purpose:
+Generating SPAN Configuration
+############################################}
+{% if span is defined and span %}
+{% for session in span.session %}
+{% if session.state == "present" %}
+{% if session.acl_grp  %}
+monitor session {{ session.name }} source {{ session.source }} {{ session.direction }} ip access-group {{ session.acl_grp }}
+{% else  %}
+monitor session {{ session.name }} source {{ session.source }} {{ session.direction }}
+{% endif %}
+{% if session.desitnation == "erspan" %}
+monitor session {{ session.name }} destination tunnel mode gre source {{ session.src_ip }} destination {{ session.dst_ip }} ttl {{ session.ttl }} dscp {{ session.dscp }}
+{% else %}
+monitor session {{ session.name }} destination {{ session.desitnation }}
+{% endif %}
+{% elif session.state == "absent" %}
+no monitor session {{ session.name }} 
+{% endif %}
+{% endfor %}
+!
+{% endif %}
+
+

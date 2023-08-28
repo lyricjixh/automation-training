@@ -1,0 +1,23 @@
+{###########################################
+
+Purpose:
+Generating Initial Provisioning CFG
+############################################}
+{% if domain is defined and domain %}
+hostname {{ hostname }}.{{ domain.name }}
+{% else %}
+hostname {{ hostname }}
+{% endif %}
+!
+username admin secret 0 {{ vault_admin_password }}
+username lab secret 0 {{ vault_lab_password }}
+!
+vrf instance MGMT
+!
+interface management 0
+ description OOB Managment Port
+ vrf forwarding MGMT 
+ ip address {{ ansible_host }}/{{ oob_ipv4_mask }}
+!
+ip route vrf MGMT 0.0.0.0/0 {{ oob_netv4_gw }}
+!

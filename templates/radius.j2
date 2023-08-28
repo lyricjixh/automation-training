@@ -1,0 +1,25 @@
+{###########################################
+
+Purpose:
+Generating TACAS Plus Configuration
+############################################}
+{% if aaa_radius %}
+{% for group in aaa_radius.group %}
+{% for server in group.server %}
+{% if aaa_radius.vrf is defined and aaa_radius.vrf %}
+radius-server host {{ server.addr }} vrf {{ aaa_radius.vrf }} timeout {{ aaa_radius.timeout }} key 0 {{ server.key }}
+{% else %}
+radius-server host {{ server.addr }} timeout {{ aaa_radius.timeout }} key 0 {{ server.key }}
+{% endif %}
+{% endfor %}
+aaa group server radius {{ group.name }}
+{% for server in group.server %}
+   server {{ server.addr }}
+{% endfor %}
+!
+{% endfor %}
+!
+{% if aaa_radius.vrf is defined and aaa_radius.vrf %}
+ip radius source-interface management0
+{% endif %}
+{% endif %}

@@ -1,0 +1,14 @@
+{###########################################
+
+Purpose:
+Generating BGP EVPN Overlay Configuration
+############################################}
+router bgp {{ bgp.local_as }}
+ address-family l2vpn evpn
+{% for vni in vxlans %}
+  no vni {{ vxlan_id_prx }}{{ vni.vlan }}
+  !
+{% endfor %}
+ !
+!
+

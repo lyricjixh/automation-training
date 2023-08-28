@@ -1,0 +1,22 @@
+{##################################################
+
+Purpose:
+Generating OSPF Underlay Configuration
+###################################################}
+{% if evpn.vrf is defined and evpn.vrf %}
+router multicast
+{% for vrf in evpn.vrf %}
+{% if vrf.multicast is defined and vrf.multicast %}
+ vrf {{ vrf.name }}
+{% for mcast in vrf.multicast %}
+   {{ mcast.type }}
+{% for attri in mcast.attributes %}
+     {{ attri }}
+{% endfor %}
+   !
+{% endfor %}
+ !
+{% endif %}
+{% endfor %}
+!
+{% endif %}

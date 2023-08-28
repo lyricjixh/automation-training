@@ -1,0 +1,182 @@
+{##################################################
+
+Purpose:
+Generating BGP Dual-Stack Configuration
+###################################################}
+router bgp {{ bgp.local_as }}
+  router-id {{ lpbk_ulay.addr_v4 }}
+{% if bgp.attributes is defined and bgp.attributes %}
+{% for attr in bgp.attributes %}
+  {{ attr }}
+{% endfor %}
+{% endif %}
+  !
+{% if bgp.peer_group is defined and bgp.peer_group %}
+{% set pgroup_v4 = bgp.peer_group | json_query('[?contains(afi,`ipv4`)].name') %}
+{% set pgroup_v6 = bgp.peer_group | json_query('[?contains(afi,`ipv6`)].name') %}
+{% set pgroup_evpn = bgp.peer_group | json_query('[?contains(afi,`evpn`)].name') %}
+{% for group in bgp.peer_group %}
+  neighbor {{ group.name }} peer group
+  neighbor {{ group.name }} description "{{ group.desc }}"
+{% if group.remote_as is defined and group.remote_as %}
+  neighbor {{ group.name }} remote-as {{ group.remote_as }}
+{% endif %}
+{% if group.admin_state == "down" %}
+  neighbor {{ group.name }} shutdown
+{% endif %}
+{% if group.attributes is defined and group.attributes %}
+{% for attr in group.attributes %}
+  neighbor {{ group.name }} {{ attr }}
+{% endfor %}
+{% endif %}
+  !
+{% endfor %}
+{% endif %}
+{% if evpn.vrf is defined and evpn.vrf %}
+{% for vrf in evpn.vrf %}
+  vrf {{ vrf.name }}
+    router-id 10.99.11.{{ seq }}
+    rd {{ lpbk_olay.addr_v4 }}:{{ vrf.l3_vni.id }}
+    route-target export evpn {{ vrf.l3_vni.id }}:{{ vrf.l3_vni.id }}
+    route-target import evpn {{ vrf.l3_vni.id }}:{{ vrf.l3_vni.id }}
+{% if vrf.bgp is defined and vrf.bgp %}
+{% if vrf.bgp.redistribute is defined and vrf.bgp.redistribute %}
+{% for redis in vrf.bgp.redistribute %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if vrf.multicast is defined and vrf.multicast %}
+    evpn multicast
+{% endif %}
+{% if vrf.bgp.attributes is defined and vrf.bgp.attributes %}
+{% for attr in vrf.bgp.attributes %}
+    {{ attr }}
+{% endfor %}
+{% endif %}
+{% if vrf.bgp.peers is defined and vrf.bgp.peers %}
+{% for peer in vrf.bgp.peers %}
+{% if peer.desc %}
+    neighbor {{ peer.addr }} description "{{ peer.desc }}"
+{% endif %}
+{% if peer.peer_group %}
+    neighbor {{ peer.addr }} peer group {{ peer.peer_group }}
+{% endif %}
+{% if peer.remote_as %}
+    neighbor {{ peer.addr }} remote-as {{ peer.remote_as }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
+  !
+{% endfor %}
+{% endif %}
+{% if vxlans is defined and vxlans %}
+{% for vni in vxlans %}
+  vlan {{ vni.vlan }}
+    rd {{ lpbk_olay.addr_v4 }}:{{ vxlan_id_prx }}{{ vni.vlan }}
+    route-target both {{ vxlan_id_prx }}{{ vni.vlan }}:{{ vxlan_id_prx }}{{ vni.vlan }}
+    redistribute learned
+{% if vni.mcast is defined and vni.mcast %}
+    redistribute igmp
+{% endif %}
+  !
+{% endfor %}
+{% endif %}
+  address-family ipv4
+{% if bgp.afi.ipv4 is defined and bgp.afi.ipv4 %}
+{% for redis in bgp.afi.ipv4 %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if pgroup_v4 is defined and pgroup_v4 %}
+{% for group in pgroup_v4 %}
+    neighbor {{ group }} activate
+{% endfor %}
+{% endif %}
+  !
+  address-family ipv6
+{% if bgp.afi.ipv6 is defined and bgp.afi.ipv6 %}
+{% for redis in bgp.afi.ipv6 %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if pgroup_v6 is defined and pgroup_v6 %}
+{% for group in pgroup_v6 %}
+    neighbor {{ group }} activate
+{% endfor %}
+{% endif %}
+  !
+  address-family evpn
+{% if bgp.afi.evpn is defined and bgp.afi.evpn %}
+{% for redis in bgp.afi.evpn %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if pgroup_evpn is defined and pgroup_evpn %}
+{% for group in pgroup_evpn %}
+    neighbor {{ group }} activate
+{% endfor %}
+{% endif %}
+{% if pgroup_v4 is defined and pgroup_v4 %}
+{% for group in pgroup_v4 %}
+    no neighbor {{ group }} activate
+{% endfor %}
+{% endif %}
+{% if pgroup_v6 is defined and pgroup_v6 %}
+{% for group in pgroup_v6 %}
+    no neighbor {{ group }} activate
+{% endfor %}
+{% endif %}
+  !
+{% if bgp.peers is defined and bgp.peers %}
+{% for peer in bgp.peers %}
+{% if peer.peer_group == "TOR-PEER_v4" %}
+{% if seq is even %}
+  neighbor {{ tor_pair_netv4 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }} description "tor_pair_ibgp_v4"
+  neighbor {{ tor_pair_netv4 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }} peer group tor_peer_v4
+{% else %}
+  neighbor {{ tor_pair_netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }} description "tor_pair_ibgp_v4"
+  neighbor {{ tor_pair_netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }} peer group tor_peer_v4
+{% endif %}
+{% elif peer.peer_group == "TOR-PEER_v6" %}
+{% if seq is even %}
+  neighbor {{ tor_pair_netv6 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }} description "tor_pair_ibgp_v6"
+  neighbor {{ tor_pair_netv6 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }} peer group tor_peer_v6
+{% else %}
+  neighbor {{ tor_pair_netv6 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }} description "tor_pair_ibgp_v6"
+  neighbor {{ tor_pair_netv6 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }} peer group tor_peer_v6
+{% endif %}
+{% else %}
+  neighbor {{ peer.addr }} description "{{ peer.desc }}"
+{% if peer.peer_group %}
+  neighbor {{ peer.addr }} peer group {{ peer.peer_group }}
+{% endif %}
+{% if peer.remote_as %}
+  neighbor {{ peer.addr }} remote-as {{ peer.remote_as }}
+{% endif %}
+  !
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if bgp.listen_range is defined and bgp.listen_range %}
+{% for lrange in bgp.listen_range %}
+  bgp listen range {{ lrange.network }} peer-group {{ lrange.peer_group }} peer-filter {{ lrange.peer_filter }}
+{% endfor %}
+{% endif %}
+!

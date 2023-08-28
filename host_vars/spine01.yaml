@@ -1,0 +1,70 @@
+name_orig: "smd501"
+
+# test_seq: 0
+## spine01's fabirc link defined in its own host file due to ipaddr not handling 0.
+fabric_links:
+  - 
+    name: "{{ ports.fabric[0] }}"
+    state: "present"    
+    desc: "Fabric Port To LEAF01"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr('network') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr('network') }}"
+  - 
+    name: "{{ ports.fabric[1] }}"
+    state: "present"    
+    desc: "Fabric Port To LEAF02"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[1]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[1]) | ansible.utils.ipaddr('address') }}"
+  - 
+    name: "{{ ports.fabric[2] }}"
+    state: "present"    
+    desc: "Fabric Port To LEAF03"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[2]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[2]) | ansible.utils.ipaddr('address') }}"
+  - 
+    name: "{{ ports.fabric[3] }}"
+    state: "present"    
+    desc: "Fabric Port To LEAF04"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[3]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[3]) | ansible.utils.ipaddr('address') }}"
+  - 
+    name: "{{ ports.fabric[4] }}"
+    state: "present"
+    desc: "Fabric Port To LEAF05"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[4]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[4]) | ansible.utils.ipaddr('address') }}"
+  - 
+    name: "{{ ports.fabric[5] }}"
+    state: "present"    
+    desc: "Fabric Port To LEAF06"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[5]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[5]) | ansible.utils.ipaddr('address') }}"
+  - 
+    name: "{{ ports.fabric[6] }}"
+    state: "present"
+    desc: "Fabric Port To LEAF07"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[6]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[6]) | ansible.utils.ipaddr('address') }}"
+  - 
+    name: "{{ ports.fabric[7] }}"
+    state: "present"    
+    desc: "Fabric Port To LEAF08"
+    admin_state: "up"
+    addr_v4: "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[7]) | ansible.utils.ipaddr('address') }}"
+    addr_v6: "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[7]) | ansible.utils.ipaddr('address') }}"
+
+urpf_port:
+  - "Port-Channel5"
+  - "Port-Channel50.60"
+  # - "Eth7/1"
+  # - "Eth8/1"
+  # - "Eth9/1"
+  # - "Eth10/1"
+  

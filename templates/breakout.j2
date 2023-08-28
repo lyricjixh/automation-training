@@ -1,0 +1,14 @@
+{###########################################
+
+Purpose:
+Generating Physical Southbound Interface Configuration
+including: Computing facing port
+############################################}
+{% if breakout is defined and breakout %}
+{% for breakrange in breakout %}
+{% for bport in range(breakrange.start, breakrange.end+1) %}
+interface breakout port 1/{{ bport }} mode {{ breakrange.type }}
+{% endfor %}
+!
+{% endfor %}
+{% endif %}

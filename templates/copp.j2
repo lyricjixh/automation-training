@@ -1,0 +1,18 @@
+{###########################################
+
+Purpose:
+Generating Copp Configuration
+############################################}
+line vty
+{% if copp.v4.state|lower == "present" %}
+ ip access-group {{ copp.v4.name }} in
+{% elif copp.v4.state|lower == "absent" %}
+ no ip access-group {{ copp.v4.name }} in
+{% endif %}
+{% if copp.v6.state|lower == "present" %}
+ ipv6 access-group {{ copp.v6.name }} in
+{% elif copp.v6.state|lower == "absent" %}
+ no ipv6 access-group {{ copp.v6.name }} in
+{% endif %}
+exit
+

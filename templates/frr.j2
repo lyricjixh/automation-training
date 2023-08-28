@@ -1,0 +1,121 @@
+{###########################################
+
+Purpose:
+Generating FRR Configuration
+############################################}
+hostname {{ hostname }}
+!
+frr defaults traditional
+log syslog informational
+ipv6 forwarding
+service integrated-vtysh-config
+!
+{% for intf in interfaces %}
+interface {{ intf.name }}
+ ip address {{ intf.addr_v4 }}
+{% if intf.addr_v6 %}
+ ipv6 address {{ intf.addr_v6 }}
+{% endif %}
+!
+{% endfor %}
+router bgp {{ proto.bgp.local_asn }}
+ bgp ebgp-requires-policy
+{% if proto.bgp.gw_peer_v4 %}
+ neighbor V4 peer-group
+ neighbor V4 route-map EXPORT out
+{% for peer in proto.bgp.gw_peer_v4 %}
+ neighbor {{ peer.addr }} peer-group V4
+ neighbor {{ peer.addr }} remote-as {{ peer.remote_asn }}
+{% endfor %}
+{% endif %}
+{% if proto.bgp.gw_peer_v6 %}
+ neighbor V6 peer-group
+{% for peer in proto.bgp.gw_peer_v6 %}
+ neighbor {{ peer.addr }} peer-group V6
+ neighbor {{ peer.addr }} remote-as {{ peer.remote_asn }}
+{% endfor %}
+{% endif %}
+ !
+{% if afi.ipv4 %}
+ address-family ipv4 unicast
+{% for redist in afi.ipv4 %}
+{% if redist.r_map %}
+    redistribute {{ redist.proto }} route-map {{ redist.r_map }}
+{% else %}
+    redistribute {{ redist.proto }}
+{% endif %}
+{% endfor %}
+ exit-address-family
+ !
+{% endif %}
+{% if afi.ipv6 %}
+ address-family ipv6 unicast
+{% for redist in afi.ipv6 %}
+{% if redist.r_map %}
+    redistribute {{ redist.proto }} route-map {{ redist.r_map }}
+{% else %}
+    redistribute {{ redist.proto }}
+{% endif %}
+{% endfor %}
+ exit-address-family
+ !
+{% endif %}
+!
+{% if policy.comm_list is defined and policy.comm_list %}
+{% for list in policy.comm_list %}
+{% if list.permit is defined and list.permit %}
+{% for permit in list.permit %}
+ip community-list {{ list.name }} permit {{ permit }}
+{% endfor %}
+{% endif %}
+{% if list.deny %}
+{% for deny in list.deny %}
+ip community-list {{ list.name }} deny {{ permit }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.as_path is defined and policy.as_path %}
+{% for aspath in policy.as_path %}
+{% for path in aspath.path %}
+ip as-path access-list {{ aspath.name }} permit {{ path }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.prefix_list is defined and policy.prefix_list %}
+{% for plist in policy.prefix_list %}
+{% if plist.afi == "ipv6" %}
+ipv6 prefix-list {{ plist.name }}
+{% for prefix in plist.prefix %}
+ seq {{ loop.index*10 }} {{ prefix.action }} {{ prefix.range }}
+{% endfor %}
+!
+{% else %}
+ip prefix-list {{ plist.name }}
+{% for prefix in plist.prefix %}
+  seq {{ loop.index*10 }} {{ prefix.action }} {{ prefix.range }}
+{% endfor %}
+!
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.route_map is defined and policy.route_map %}
+{% for rmap in policy.route_map %}
+{% for match in rmap.match %}
+route-map {{ rmap.name }} permit {{ loop.index*10 }}
+{% if match.type is defined and match.type %}
+  match {{ match.type }} {{ match.object }}
+{% endif %}
+{% if match.action is defined and match.action %}
+  set {{ match.action.type }} {{ match.action.object }}
+{% endif %}
+!
+{% endfor %}
+{% endfor %}
+{% endif %}
+!
+line vty
+!

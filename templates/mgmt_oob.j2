@@ -1,0 +1,263 @@
+{###########################################
+
+Purpose:
+Generating Static Vxlan Configuration
+############################################}
+hostname {{ hostname }}.{{ domain.name }}
+!
+hardware l3 ipv6-extended-prefix 1024
+spanning-tree mode rstp
+vrrp version 3
+service simple-password
+!
+{% for user in users %}
+username {{ user.name }} password {{ user.passwd }} role {{ user.role }} priv-lvl 15
+{% endfor %}
+!
+interface loopback{{ lpbk_ulay.id }}
+ description "{{ lpbk_ulay.desc }}"
+ no shutdown
+ ip address {{ lpbk_ulay.addr_v4 }}/32
+{% if lpbk_ulay.addr_v6 is defined and lpbk_ulay.addr_v6 %}
+ ipv6 address {{ lpbk_ulay.addr_v6 }}/128
+{% endif %}
+ exit
+!
+interface vlan{{ vlans.pair_vlan.id }}
+ description {{ vlans.pair_vlan.desc }}
+ no shutdown
+ mtu 9216
+{% if seq is odd %} 
+ ip address {{ vlans.pair_vlan.netv4 | ansible.utils.ipaddr(1) }}
+{% else %} 
+ ip address {{ vlans.pair_vlan.netv4 | ansible.utils.ipaddr(2) }}
+{% endif %}
+{% if vlans.pair_vlan.netv6 is defined and vlans.pair_vlan.netv6 %}
+{% if seq is odd %} 
+ ipv6 address {{ vlans.pair_vlan.netv6 | ansible.utils.ipaddr(1) }}
+{% else %} 
+ ipv6 address {{ vlans.pair_vlan.netv6 | ansible.utils.ipaddr(2) }}
+{% endif %}
+{% endif %}
+!
+interface vlan{{ vlans.vxrail_vlan.id }}
+ description {{ vlans.vxrail_vlan.desc }}
+ no shutdown
+ ipv6 mld snooping querier
+!
+{% for port in vlt.vlti %}
+interface ethernet1/1/{{ port }}
+ description "VLTi link"
+ no shutdown
+ no switchport
+ mtu 9216
+ flowcontrol receive on
+!
+{% endfor %}
+{% for app_vlan in vlans.app_vlans %}
+interface vlan{{ app_vlan.id }}
+  no shutdown
+!
+{% endfor %}
+{% if breakout_10g is defined and breakout_10g %}
+{% for bport in range(breakout_10g.start, breakout_10g.end+1) %}
+interface breakout 1/1/{{ bport }} map 10g-4x
+{% endfor %}
+!
+interface range ethernet1/1/{{breakout_10g.start}}:1-1/1/{{breakout_10g.end}}:4
+ no shutdown
+ switchport mode trunk
+ switchport access vlan 1
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu 9216
+ flowcontrol receive off
+!
+{% endif %}
+{% if breakout_25g is defined and breakout_25g %}
+{% for bport in range(breakout_25g.start, breakout_25g.end+1) %}
+interface breakout 1/1/{{ bport }} map 25g-4x
+{% endfor %}
+!
+interface range ethernet1/1/{{breakout_25g.start}}:1-1/1/{{breakout_25g.end}}:4
+ no shutdown
+ switchport mode trunk
+ switchport access vlan 1
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu 9216
+ flowcontrol receive off
+!
+{% endif %}
+{% if breakout_40g is defined and breakout_40g %}
+{% for bport in range(breakout_40g.start, breakout_40g.end+1) %}
+interface breakout 1/1/{{ bport }} map 40g-1x
+{% endfor %}
+!
+interface range ethernet1/1/{{breakout_40g.start}}:1-1/1/{{breakout_40g.end}}:1
+ no shutdown
+ switchport mode trunk
+ switchport access vlan 1
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu 9216
+ flowcontrol receive off
+!
+{% endif %}
+!
+{% for intf in fabric_links %}
+interface ethernet1/1/{{ intf.name }}
+ description "{{ intf.desc }}"
+ no switchport
+ ip address {{ intf.addr_v4 }}/{{ fabric_ptp_netmaskv4 }}
+{% if intf.addr_v6 is defined and intf.addr_v6 %}
+ ipv6 address {{ intf.addr_v6 }}/{{ fabric_ptp_netmaskv6 }}
+{% endif %}
+ flowcontrol receive off
+ no lldp tlv-select basic-tlv management-address ipv4
+ no lldp tlv-select basic-tlv management-address ipv6
+ fec off
+ mtu 9216
+ negotiation off
+ no shutdown
+!
+{% endfor %}
+{% if trunk_port.port_indiv is defined and trunk_port.port_indiv %}
+{% for tport in trunk_port.port_indiv %}
+interface ethernet1/1/{{tport}}
+ no shutdown
+ switchport mode trunk
+ switchport access vlan 1
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu 9216
+ flowcontrol receive off
+!
+{% endfor %}
+{% endif %}
+router bgp {{ bgp.local_as }}
+ router-id {{ lpbk_ulay.addr_v4 }}
+ !
+ address-family ipv4 unicast
+  redistribute connected
+ !
+ address-family ipv6 unicast
+  redistribute connected
+ !
+ template fabric_peer_v4
+  remote-as {{ bgp.remote_as }}
+  !
+  address-family ipv4 unicast
+   allowas-in 2
+  !
+ !
+ template tor_peer_v4
+  remote-as {{ bgp.local_as }}
+  !
+  address-family ipv4 unicast
+  !
+ !
+ template sas_peer_v4
+  remote-as {{ bgp.sas_as }}
+  !
+  address-family ipv4 unicast
+  !
+ template fabric_peer_v6
+  remote-as {{ bgp.remote_as }}
+  !
+  address-family ipv4 unicast
+   no activate
+  !
+  address-family ipv6 unicast
+   allowas-in 2
+   activate
+  !
+ !
+ template tor_peer_v6
+  remote-as {{ bgp.local_as }}
+  !
+  address-family ipv4 unicast
+   no activate
+  !
+  address-family ipv6 unicast
+   activate
+  !
+ !
+ template sas_peer_v6
+  remote-as {{ bgp.sas_as }}
+  !
+  address-family ipv4 unicast
+   no activate
+  !
+  address-family ipv6 unicast
+   activate
+  !
+ !
+{% for peer in bgp.fabric_peer_v4 %}
+ neighbor {{ peer }}
+{% if seq is odd %}
+  description "s{{loop.index}}g1"
+{% else %}
+  description "s{{loop.index}}g2"
+{% endif %}
+  inherit template fabric_peer_v4
+  no shutdown
+  !
+{% endfor %}
+{% if bgp.fabric_peer_v6 is defined and bgp.fabric_peer_v6 %}
+{% for peer in bgp.fabric_peer_v6 %}
+ neighbor {{ peer }}
+{% if seq is odd %}
+  description "s{{loop.index}}g1"
+{% else %}
+  description "s{{loop.index}}g2"
+{% endif %}
+  inherit template fabric_peer_v6
+  no shutdown
+  !
+{% endfor %}
+{% endif %}
+{% if seq is even %}
+ neighbor {{ tor_pair_netv4 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}
+{% else %}
+ neighbor {{ tor_pair_netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}
+{% endif %}
+  description "tor_pair_ibgp_v4"
+  inherit template tor_peer_v4
+  no shutdown
+  !
+ !
+{% if tor_pair_netv6 is defined and tor_pair_netv6 %}
+{% if seq is even %}
+ neighbor {{ tor_pair_netv6 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}
+{% else %}
+ neighbor {{ tor_pair_netv6 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}
+{% endif %}
+  description "tor_pair_ibgp_v6"
+  inherit template tor_peer_v6
+  no shutdown
+  !
+ !
+{% endif %}
+!
+vlt-domain {{ vlt.domain_id }}
+{% if seq is even %}
+ backup destination {{ tor_pair_netv4 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}
+{% else %}
+ backup destination {{ tor_pair_netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}
+{% endif %}
+{% for port in vlt.vlti %} 
+ discovery-interface ethernet1/1/{{ port }}
+{% endfor %}
+ peer-routing
+{% if seq is even %}
+ primary-priority 100
+{% else %}
+ primary-priority 90
+{% endif %}
+ vlt-mac {{ tor_pair_vmac }}
+!
+{% include 'vlt-trunk.j2' %}
+!
+route-map drain_ingress_tfk permit 10
+ set as-path prepend {{ bgp.local_as }} {{ bgp.local_as }} {{ bgp.local_as }}
+!
+route-map drain_egress_tfk permit 10
+ set local-preference 90
+!

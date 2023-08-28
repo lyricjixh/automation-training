@@ -1,0 +1,100 @@
+{###########################################
+
+Purpose:
+Generating MLAG Domain Configuration
+############################################}
+{% if mlag_bond is defined and mlag_bond %}
+vlan {{ mlag_bond.vlan.id }}
+ name {{ mlag_bond.vlan.desc }}
+ trunk group {{ mlag_bond.group }}
+!
+no spanning-tree vlan {{ mlag_bond.vlan.id }}
+!
+{% if vlans.pair_vlan is defined and vlans.pair_vlan %}
+vlan {{ vlans.pair_vlan.id }}
+ name {{ vlans.pair_vlan.desc }}
+!
+{% endif %}
+{% if mlag_bond is defined and mlag_bond %}
+interface Port-Channel{{ mlag_bond.bond_id }}
+ description "MLAG Inter-SW CTRL PortChannel"
+ switchport
+ mtu {{ phy_mtu }}
+ switchport mode trunk 
+ switchport trunk group {{ mlag_bond.group }}
+ no shutdown
+!
+{% if mlag_bond.bmem_range is defined and mlag_bond.bmem_range %}
+{% set member = mlag_bond.bmem_range[i-1] %}
+interface Eth {{ member }}
+ description "MLAG CTRL Bond {{ mlag_bond.bond_id }} member"
+ mtu {{ phy_mtu }}
+ channel-group {{ mlag_bond.bond_id }} mode active
+ no shutdown
+!
+{% endif %}
+{% if mlag_bond.bmem_indiv is defined and mlag_bond.bmem_indiv %}
+{% for member in mlag_bond.bmem_indiv %}
+interface eth{{ member }}
+ description "MLAG CTRL Bond {{ mlag_bond.bond_id }} member"
+ mtu {{ phy_mtu }}
+ channel-group {{ mlag_bond.bond_id }} mode active
+ no shutdown
+!
+{% endfor %}
+{% endif %}
+interface vlan{{ mlag_bond.vlan.id }}
+ description {{ mlag_bond.vlan.desc }}
+ mtu {{ phy_mtu }}
+ no autostate
+ {% if seq is odd %} 
+ ip address {{ mlag_bond.vlan.netv4 | ansible.utils.ipaddr(1) }}
+{% else %} 
+ ip address {{ mlag_bond.vlan.netv4 | ansible.utils.ipaddr(2) }}
+{% endif %}
+{% if mlag_bond.vlan.netv6 is defined and mlag_bond.vlan.netv6 %}
+{% if seq is odd %} 
+ ipv6 address {{ mlag_bond.vlan.netv6 | ansible.utils.ipaddr(1) }}
+{% else %} 
+ ipv6 address {{ mlag_bond.vlan.netv6 | ansible.utils.ipaddr(2) }}
+{% endif %}
+{% endif %}
+!
+{% if vlans.pair_vlan is defined and vlans.pair_vlan %}
+interface vlan{{ vlans.pair_vlan.id }}
+ description {{ vlans.pair_vlan.desc }}
+ mtu {{ phy_mtu }}
+ no autostate
+ {% if seq is odd %} 
+ ip address {{ vlans.pair_vlan.netv4 | ansible.utils.ipaddr(1) }}
+{% else %} 
+ ip address {{ vlans.pair_vlan.netv4 | ansible.utils.ipaddr(2) }}
+{% endif %}
+{% if vlans.pair_vlan.netv6 is defined and vlans.pair_vlan.netv6 %}
+{% if seq is odd %} 
+ ipv6 address {{ vlans.pair_vlan.netv6 | ansible.utils.ipaddr(1) }}
+{% else %} 
+ ipv6 address {{ vlans.pair_vlan.netv6 | ansible.utils.ipaddr(2) }}
+{% endif %}
+{% endif %}
+!
+{% endif %}
+mlag
+ domain-id {{ mlag_bond.domain_id }}
+ heartbeat-interval 1200
+ local-interface vlan{{ mlag_bond.vlan.id }}
+{% if seq is odd %}
+ peer-address {{ mlag_bond.vlan.netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}
+{% else %}
+ peer-address {{ mlag_bond.vlan.netv4 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}
+{% endif %}
+{% if seq is odd %}
+ primary-priority 100
+{% else %}
+ primary-priority 90
+{% endif %}
+ peer-link Port-Channel{{ mlag_bond.bond_id }}
+ reload-delay 60
+!
+{% endif %}
+{% endif %}

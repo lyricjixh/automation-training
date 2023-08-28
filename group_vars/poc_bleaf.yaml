@@ -1,0 +1,244 @@
+# Location:
+rack_no: 3
+
+vxlan_rvtep:
+    - 10.10.0.1
+    - 10.10.0.2
+
+vxlan_id_prx: "10"
+vxlans:
+#   id_prx: "10"
+#    - 
+#         desc: << descirption of Vlan func, optional>>
+#         vlan: << vlan id, mandate>>
+#         netv4: << Preassigned network block, optional >>
+#         netv6: << Preassigned network block, optional >>
+#         vrf: << VRF name the vlan belong to, mandate >>
+#         state: << state value, [present|absence], mandate >>
+    - 
+        desc: "overlay_vlan"
+        vlan: "101"
+        netv4: "{{ v101_netv4 }}"
+        netv6: "{{ v101_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v101_mcast }}"
+            local_intf: "Loopback101"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v101_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "102"
+        netv4: "{{ v102_netv4 }}"
+        netv6: "{{ v102_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v102_mcast }}"
+            local_intf: "Loopback102"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v102_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "141"
+        # netv4: "{{ v141_netv4 }}"
+        # netv6: "{{ v141_netv6 }}"
+        vrf: "BMS-subnet"
+        helper_addrv4: "{{ v141_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "142"
+        # netv4: "{{ v142_netv4 }}"
+        # netv6: "{{ v142_netv6 }}"
+        vrf: "BMS-subnet"
+        helper_addrv4: "{{ v142_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "201"
+        netv4: "{{ v201_netv4 }}"
+        netv6: "{{ v201_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v102_mcast }}"
+            local_intf: "Loopback102"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v201_helper }}"
+        state: "present"
+
+sub_interfaces:
+    - phy_intf: 45
+      desc: "yyz-shepcorra Te1-1 to Eth45 :SW:UP"
+      sub_vlans:
+        - 
+            desc: "yyz-shepcorra VLAN10 Te1-1 to Eth45.11:SW:UP"
+            id: "10"
+            vrf:
+            netv4:  "{{ subvlan_netv4 }}"
+            state: "UP"
+        - 
+            desc: "yyz-shepcorra VLAN11 Te1-1 to Eth45.11:SW:UP"
+            id: "11"
+            vrf: "campus-subnet"
+            netv4: "{{ subvlan_netv4 }}"
+            state: "UP"
+        - 
+            desc: "yyz-shepcorra VLAN12 Te1-1 to Eth45.11:SW:UP"
+            id: "11"
+            vrf: "IOT-subnet"
+            netv4: "{{ subvlan_netv4 }}"
+            state: "present"
+        - 
+            desc: "yyz-shepcorra VLAN13 Te1-1 to Eth45.11:SW:UP"
+            id: "13"
+            vrf: "BMS-subnet"
+            netv4: "{{ subvlan_netv4 }}"
+            state: "present"
+
+edge_isp: "cogent"
+
+edge_links:
+-
+    l3_port: "27"
+    state: "present"
+    desc: "EDGE to ISP GW"
+    admin_state: "up"
+    netv4: "{{ edge_netv4|ansible.utils.ipsubnet(edge_netmaskv4, edge_seq) }}"
+    netv6: "{{ edge_netv6|ansible.utils.ipsubnet(edge_netmaskv6, edge_seq) }}"
+    ## Edge Addr higher(2), ISP lower(1)
+    addr_v4: "{{ edge_netv4|ansible.utils.ipsubnet(edge_netmaskv4, edge_seq)|ansible.utils.ipaddr(2) }}"
+    addr_v6: "{{ edge_netv6|ansible.utils.ipsubnet(edge_netmaskv6, edge_seq)|ansible.utils.ipaddr(2) }}"
+    vrf: "BMS-subnet"
+    mcast:
+        igmp:
+        l2_group:
+        local_intf: "Loopback101"
+        pim_mode: "sparse-mode"
+        pim_attri: ["hello interval 1"]
+# - 
+#     l3_port:
+#     vlan: "1991"
+#     desc: "overlay_edge_vlan"
+#     trunk_port: ["27"]
+#     ## Edge Addr higher(2), ISP lower(1)
+#     netv4: "{{ edge_netv4|ansible.utils.ipsubnet(edge_netmaskv4, edge_seq) }}"
+#     netv6: "{{ edge_netv6|ansible.utils.ipsubnet(edge_netmaskv6, edge_seq) }}"
+#     vrf: "BMS-subnet"
+#     mcast:
+#         igmp:
+#         l2_group:
+#         local_intf: "Loopback101"
+#         pim_mode: "sparse-mode"
+#         pim_attri: ["hello interval 1"]
+#     state: "present"
+
+test_links:
+   -
+    name: 
+    state: "present"    
+    desc: "To IXIA"
+    admin_state: "up"
+## Edge Addr higher(2), ISP lower(1)
+    netv4: "{{ test_netv4|ansible.utils.ipsubnet(test_netmaskv4, seq-5 ) }}"
+    netv6: "{{ test_netv6|ansible.utils.ipsubnet(test_netmaskv6, seq-5 ) }}"
+    vrf: "BMS-subnet"
+
+edge_bgp:
+  local_as: "{{ asn_base+rack_no }}"
+  peer_group:
+  -
+    name: "ISP-PEER-GROUP_v4"
+    desc: "GENERIC-ISP-PG"
+    remote_as:
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "remove-private-as"
+      - "route-map ISP-GENERIC-IN in"
+      - "route-map ISP-GENERIC-OUT out"
+      - "send-community"
+      - "ebgp-multihop 2"
+      - "maximum-routes 0"
+  -
+    name: "ISP-PEER-GROUP_v6"
+    desc: "GENERIC-ISP-PG"
+    remote_as:
+    admin_state: "up"
+    afi:
+    - "ipv6"
+    attributes:
+      - "remove-private-as"
+      - "route-map ISP-GENERIC-IN in"
+      - "route-map ISP-GENERIC-OUT out"
+      - "send-community"
+      - "ebgp-multihop 2"
+      - "maximum-routes 0"
+  -
+    name: "tester_v4"
+    desc: "IXIA PG V4"
+    remote_as: "1234"
+    admin_state: "up"
+    afi:
+    - "ipv4"
+    attributes:
+      - "send-community"
+      - "ebgp-multihop 5"
+      - "maximum-routes 0"
+  -
+    name: "tester_v6"
+    desc: "IXIA PG V6"
+    remote_as: "1234"
+    admin_state: "up"
+    afi:
+    - "ipv6"
+    attributes:
+      - "send-community"
+      - "ebgp-multihop 5"
+      - "maximum-routes 0"
+  peers:
+    - 
+      addr: "{{ edge_links[0].netv4 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}"
+      desc: "DC Fabric Edge Peer V4"
+      remote_as: "{{ remote_isp_asn }}"
+      peer_group: "ISP-PEER-GROUP_v4"
+      vrf: "BMS-subnet"
+    - 
+      addr: "{{ edge_links[0].netv6 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}"
+      desc: "DC Fabric Edge Peer V6"
+      remote_as: "{{ remote_isp_asn }}"
+      peer_group: "ISP-PEER-GROUP_v6"
+      vrf: "BMS-subnet"
+    - 
+      addr: "{{ test_links[0].netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}"
+      desc: "Tester Peer V4"
+      remote_as:
+      peer_group: "tester_v4"
+      vrf: "BMS-subnet"
+    - 
+      addr: "{{ test_links[0].netv6 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}"
+      desc: "Tester Peer V6"
+      remote_as:
+      peer_group: "tester_v6"
+      vrf: "BMS-subnet"
+  afi: 
+  #   ipv4:
+  #   -
+  #       r_map: "LOCAL_CONNECTED_V4"
+  #       proto: connected
+  #   ipv6:
+  #   -
+  #       r_map: "LOCAL-LOOPBACK-V6"
+  #       proto: connected
+  # flowspec: 
+  #   ipv4: "disable"
+  #   ipv6: "disable"
+

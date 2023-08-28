@@ -1,0 +1,14 @@
+{###########################################
+
+Purpose:
+Generating Vlan Interface Configuration
+############################################}
+{% if vxlans is defined and vxlans %}
+{% for vni in vxlans %}
+interface vlan{{ vni.vlan }}
+  description "{{ vni.desc }}"
+  mtu {{ vxlan_mtu }}
+  exit
+!
+{% endfor %}
+{% endif %}

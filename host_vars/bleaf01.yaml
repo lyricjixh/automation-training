@@ -1,0 +1,7 @@
+edge_seq: "{{ xconn_v4 | json_query('[?pointa==`edge1` && pointb==`dc-gw01`].seq') | first }}"
+edge_netmaskv4: "{{ xconn_v4 | json_query('[?pointa==`edge1` && pointb==`dc-gw01`].netmask') | first }}"
+edge_netmaskv6: "{{ xconn_v6 | json_query('[?pointa==`edge1` && pointb==`dc-gw01`].netmask') | first }}"
+edge_netv4: "{{ xconn_v4 | json_query('[?pointa==`edge1` && pointb==`dc-gw01`].net') | first }}"
+edge_netv6: "{{ xconn_v6 | json_query('[?pointa==`edge1` && pointb==`dc-gw01`].net') | first }}"
+
+remote_isp_asn: "{{ isp_asn | json_query('[?name==`cogent`].id') | first }}"

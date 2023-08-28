@@ -1,0 +1,55 @@
+{##################################################
+
+Purpose:
+Generating OSPF Underlay Configuration
+###################################################}
+{% if pim is defined and pim %}
+{% for instance in pim %}
+{% if instance.mode %}
+router pim {{ instance.mode }}
+{% else %}
+router pim
+{% endif %}
+ {{ instance.type }}
+{% if instance.anycast_rps is defined and instance.anycast_rps %}
+{% for anyrp in instance.anycast_rps %}
+{% for router in anyrp.routers %}
+   anycast-rp {{ anyrp.addr }} {{ router }} register-count {{ anyrp.count }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if instance.rps %}
+{% for rp in instance.rps %}
+{% if rp.groups %}
+{% for group in rp.groups %}
+   rp address {{ rp.addr }} {{ group }}
+{% endfor %}
+{% else %}
+   rp address {{ rp.addr }} override
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if instance.attributes %}
+{% for attri in instance.attributes %}
+   {{ attri }}
+{% endfor %}
+{% endif %}
+!
+{% if instance.interfaces is defined and instance.interfaces %}
+{% for intf in instance.interfaces.name %}
+interface {{ intf }}
+   multicast ipv4 static
+   pim ipv4 {{ instance.interfaces.mode }}
+{% if instance.local_intf is defined and instance.local_intf %}
+   pim ipv4 local-interface {{ instance.local_intf }}
+{% endif %}
+{% if instance.local_intf is defined and instance.local_intf %}
+{% for attri in instance.interfaces.attributes %}
+   pim ipv4 {{ attri }}
+{% endfor %}
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}

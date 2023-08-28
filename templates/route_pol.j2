@@ -1,0 +1,73 @@
+{###########################################
+
+Purpose:
+Configure Routing Policy for ceos Devices
+############################################}
+
+{% if policy.comm_list is defined and policy.comm_list %}
+{% for list in policy.comm_list %}
+{% if list.permit is defined and list.permit %}
+{% for permit in list.permit %}
+ip community-list {{ list.name }} permit {{ permit }}
+{% endfor %}
+{% endif %}
+{% if list.deny %}
+{% for deny in list.deny %}
+ip community-list {{ list.name }} deny {{ permit }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.as_path is defined and policy.as_path %}
+{% for aspath in policy.as_path %}
+{% for path in aspath.path %}
+ip as-path access-list {{ aspath.name }} permit {{ path }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.prefix_list is defined and policy.prefix_list %}
+{% for plist in policy.prefix_list %}
+{% if plist.afi == "ipv6" %}
+ipv6 prefix-list {{ plist.name }}
+{% for prefix in plist.prefix %}
+ seq {{ loop.index*plist.step }} {{ prefix.action }} {{ prefix.range }}
+{% endfor %}
+!
+{% else %}
+ip prefix-list {{ plist.name }}
+{% for prefix in plist.prefix %}
+  seq {{ loop.index*10 }} {{ prefix.action }} {{ prefix.range }}
+{% endfor %}
+!
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.route_map is defined and policy.route_map %}
+{% for rmap in policy.route_map %}
+{% for rule in rmap.rule %}
+route-map {{ rmap.name }} {{ rule.allow }} {{ loop.index*rmap.step }}
+{% if rule.type is defined and rule.type %}
+  match {{ rule.type }} {{ rule.object }}
+{% endif %}
+{% if rule.action is defined and rule.action %}
+  set {{ rule.action.type }} {{ rule.action.object }}
+{% endif %}
+!
+{% endfor %}
+{% endfor %}
+{% endif %}
+!
+{% if policy.peer_filter is defined and policy.peer_filter %}
+{% for pfilter in policy.peer_filter %}
+peer-filter {{ pfilter.name }}
+{% if pfilter.match %}
+{% for match in pfilter.match %}
+  {{ loop.index*pfilter.step }} match as-range {{ match.range }} result {{ match.result }}
+{% endfor %}
+{% endif %}
+!
+{% endfor %}
+{% endif %}

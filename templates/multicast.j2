@@ -1,0 +1,16 @@
+{##################################################
+
+Purpose:
+Generating OSPF Underlay Configuration
+###################################################}
+{% if multicast is defined and multicast %}
+router multicast
+{% for mcast in multicast %}
+ {{ mcast.type }}
+{% for attri in mcast.attributes %}
+   {{ attri }}
+{% endfor %}
+ !
+{% endfor %}
+!
+{% endif %}

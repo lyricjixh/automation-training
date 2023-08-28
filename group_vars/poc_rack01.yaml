@@ -1,0 +1,78 @@
+# Location:
+rack_no: 1
+
+vlt_primary_priority: 1
+vlt_backup_destination: "{{ hostvars['sw1001b-x']['ansible_host'] }}"
+
+vxlan_rvtep:
+    - 10.10.0.2
+    - 10.10.0.3
+
+vxlan_id_prx: "10"
+vxlans:
+#   id_prx: "10"
+#    - 
+#         desc: << descirption of Vlan func, optional>>
+#         vlan: << vlan id, mandate>>
+#         netv4: << Preassigned network block, optional >>
+#         netv6: << Preassigned network block, optional >>
+#         vrf: << VRF name the vlan belong to, mandate >>
+#         state: << state value, [present|absence], mandate >>
+    - 
+        desc: "overlay_vlan"
+        vlan: "101"
+        netv4: "{{ v101_netv4 }}"
+        netv6: "{{ v101_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v101_mcast }}"
+            local_intf: "Loopback101"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v101_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "102"
+        netv4: "{{ v102_netv4 }}"
+        netv6: "{{ v102_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v102_mcast }}"
+            local_intf: "Loopback102"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v102_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "103"
+        netv4: "{{ v103_netv4 }}"
+        netv6: "{{ v103_netv6 }}"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v103_mcast }}"
+            local_intf: "Loopback103"
+            pim_mode:
+            pim_attri:
+        vrf: "BMS-subnet"
+        helper_addrv4: "{{ v103_helper }}"
+        state: "absence"
+    - 
+        desc: "overlay_vlan"
+        vlan: "141"
+        # netv4: "{{ v141_netv4 }}"
+        # netv6: "{{ v141_netv6 }}"
+        vrf: "BMS-subnet"
+        helper_addrv4: "{{ v141_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "142"
+        # netv4: "{{ v142_netv4 }}"
+        # netv6: "{{ v142_netv6 }}"
+        vrf: "BMS-subnet"
+        helper_addrv4: "{{ v142_helper }}"
+        state: "present"

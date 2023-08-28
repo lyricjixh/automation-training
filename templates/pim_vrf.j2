@@ -1,0 +1,44 @@
+{##################################################
+
+Purpose:
+Generating OSPF Underlay Configuration
+###################################################}
+{% if evpn.vrf is defined and evpn.vrf %}
+{% for vrf in evpn.vrf %}
+{% if vrf.pim is defined and vrf.pim %}
+{% for instance in vrf.pim %}
+{% if instance.mode %}
+router pim {{ instance.mode }}
+{% else %}
+router pim
+{% endif %}
+   vrf {{ vrf.name }}
+     {{ instance.type }}
+{% if instance.anycast_rps is defined and instance.anycast_rps %}
+{% for anyrp in instance.anycast_rps %}
+{% for router in anyrp.routers %}
+       anycast-rp {{ anyrp.addr }} {{ router }} register-count {{ anyrp.count }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if instance.rps %}
+{% for rp in instance.rps %}
+{% if rp.groups is defined and rp.groups %}
+{% for group in rp.groups %}
+       rp address {{ rp.addr }} {{ group }}
+{% endfor %}
+{% else %}
+       rp address {{ rp.addr }} override
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if instance.attributes %}
+{% for attri in instance.attributes %}
+     {{ attri }}
+{% endfor %}
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,9 @@
+name_orig: "cal383"
+## BGP parameter in the host var file for 1st fabric link handling
+##
+bgp_fabric_peer_v4:
+    - "{{ fabric_ptp_netv4 | ansible.utils.ipaddr('network') }}"
+    - "{{ fabric_ptp_netv4 | ansible.utils.ipaddr(fabric_link_seq[1]) | ansible.utils.ipaddr('address') }}"
+bgp_fabric_peer_v6:
+    - "{{ fabric_ptp_netv6 | ansible.utils.ipaddr('network') }}"
+    - "{{ fabric_ptp_netv6 | ansible.utils.ipaddr(fabric_link_seq[1]) | ansible.utils.ipaddr('address') }}"

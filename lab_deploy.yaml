@@ -1,0 +1,214 @@
+---
+- hosts: dc2
+  gather_facts: false
+  collections:
+  - arista.eos
+
+  tasks:
+  - name: Change Hostname
+    arista.eos.eos_hostname:
+      config:
+        hostname: "{{ inventory_hostname }}"
+      state: merged
+    tags:
+    - hostname
+    - skips
+
+  - name: Enable Network Services
+    vars:
+      ansible_command_timeout: 60
+    block:
+    - name: Enable IP Routing
+      eos_config:
+        lines: 
+        - ip routing
+        - ipv6 unicast-routing
+        - ip routing vrf MGMT
+      tags:
+      - routing
+
+    - name: Enable Banner Motd
+      eos_banner:
+        banner: motd
+        text: "{{ lookup('file', 'files/banner_motd') }}"
+        state: present
+      tags:
+      - banner
+
+    - name: Enable Banner Login
+      eos_banner:
+        banner: login
+        text: "{{ lookup('file', 'files/banner_login') }}"
+        state: present
+      tags:
+      - banner
+
+    - name: Setup the local user accounts
+      block:
+      - name: Enable all local users
+        eos_config:
+          src: user.j2
+
+      - name: Add SSHKEY for Ansible user
+        arista.eos.eos_user:
+          name: ansible
+          sshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+          state: present
+
+      tags:
+      - users
+    tags:
+    - netserv
+    - skips
+
+  - name: Enable loopback Interface
+    eos_config:
+        src: intf_lpbk.j2
+    tags:
+    - loopback
+    - skips
+
+  - name: Enable Leaf/Spine PTP Interface
+    eos_config:
+        src: intf_ptp.j2
+    tags:
+    - ptp
+    - skips
+
+  - name: Enable Southbound L2/MLAG/Trunk Interface
+    block:
+    - name: Enable Layer2 Port
+      eos_config:
+          src: intf_l2.j2
+      when: (features.interface.l2port is defined and features.interface.l2port|lower == "yes")
+
+    - name: Enable MLAG Domain
+      eos_config:
+          src: mlag.j2
+      when: (features.interface.mlag is defined and features.interface.mlag|lower == "yes")
+      tags:
+        - mlag
+    - name: Enable Bond and Trunking
+      eos_config:
+          src: intf_portchannel.j2
+      when: (features.interface.bond is defined and features.interface.bond|lower == "yes")
+      tags:
+        - mlag
+        - bond
+    when: "'leaf' in inventory_hostname"
+    tags:
+    - l2port
+    - skips
+
+  - name: Enable Routing Policy
+    eos_config:
+        src: route_pol.j2
+    # when: "'leaf' in inventory_hostname"
+    tags:
+    - rpol
+    - skips
+
+  - name: Enable MBGP on Leaf/Spine fabric
+    eos_config:
+        src: bgp_fabric.j2
+    tags:
+    - bgp
+
+  - name: Enable MBGP on Leaf/Spine fabric
+    eos_config:
+        src: bgp_edge.j2
+    tags:
+    - edge
+
+  # - name: Enable Standard BGP on Leaf
+  #   eos_config:
+  #       src: bgp_underlay_leaf.j2
+  #   tags:
+  #   - standard
+
+  - name: Enable EVPN on LEAVES
+    block:
+    - name: Enable Vxlan Tunneling
+      eos_config:
+          src: vxlan.j2
+      when: "'leaf' in inventory_hostname"
+      tags:
+      - vxlan
+
+    - name: Enable EVPN Routing
+      eos_config:
+          src: vrf_routing.j2
+      when: "'leaf' in inventory_hostname"
+      tags:
+      - vrf_routing
+    when: "'leaf' in inventory_hostname"
+    tags:
+    - evpn
+
+  - name: Enable Monitoring
+    block:
+    - name: Enable Sflow
+      eos_config:
+          src: sflow.j2
+      when: (features.netserv.sflow is defined and features.netserv.sflow|lower == "yes")
+      tags:
+      - sflow
+
+    - name: Enable SPAN
+      eos_config:
+        src: span.j2
+      when: (features.netserv.span is defined and features.netserv.span|lower == "yes")
+      tags:
+      - span
+
+    - name: Enable Telemetry
+      eos_config:
+        src: telemetry.j2
+      when: (features.netserv.telemetry is defined and features.netserv.telemetry|lower == "yes")
+      tags:
+      - telemetry
+    when: "'leaf' in inventory_hostname"
+    tags:
+    - monitor
+
+# - hosts: func_edge
+#   gather_facts: false
+#   collections:
+#   - arista.eos
+
+#   tasks:
+#   - name: Enable Edge Functions
+#     block:
+#       - name: Enable loopback Interface
+#         eos_config:
+#             src: intf_lpbk.j2
+#         tags:
+#         - loopback
+
+#       - name: Enable PTP Interface
+#         eos_config:
+#             src: intf_ptp_edge.j2
+#         tags:
+#         - ptp
+
+#       - name: Enable Tester Interface
+#         eos_config:
+#             src: intf_test_isp.j2
+#         tags:
+#         - tester
+
+#       - name: Enable Edge BGP on ISP GW
+#         eos_config:
+#             src: bgp_gateway.j2
+#         when: "'gw' in inventory_hostname"
+#         tags:
+#         - standard
+
+#       - name: Enable Edge BGP in EDGE VRF
+#         eos_config:
+#             src: bgp_edge.j2
+#         when: "'spine' in inventory_hostname"
+#         tags:
+#         - bgpedge
+#     tags:
+#       - edge

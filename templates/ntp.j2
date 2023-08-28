@@ -1,0 +1,35 @@
+{###########################################
+
+Purpose:
+Generating NTP Configuration
+############################################}
+{% if ntp is defined and ntp %}
+{% if ntp.authenticate|lower == "yes" %}
+ntp authenticate
+{% endif %}
+{% if ntp.auth_key is defined and ntp.auth_key %}
+{% for value in ntp.auth_key %}
+ntp authentication-key {{ value.seq }} {{ value.type }} 0 {{ value.text }}
+{% endfor %}
+{% endif %}
+{% if ntp.trusted_key is defined and ntp.trusted_key %}
+ntp trusted-key {{ ntp.trusted_key }}
+{% endif %}
+{% for server in ntp.server %}
+{% if ntp.vrf is defined and ntp.vrf %}
+{% if server.state|lower == "present" %}
+ntp server vrf {{ ntp.vrf }} {{ server.addr }}
+{% elif server.state|lower == "absence" %}
+no ntp server vrf MGMT {{ server.addr }}
+{% endif %}
+{% else %}
+{% if server.state|lower == "present" %}
+ntp server {{ server.addr }}
+{% elif server.state|lower == "absence" %}
+no ntp server {{ server.addr }}
+{% endif %}
+{% endif %}
+{% endfor %}
+!
+{% endif %}
+

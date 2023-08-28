@@ -1,0 +1,42 @@
+{###########################################
+
+Purpose:
+Generating Physical Southbound Interface Configuration
+including: Computing facing port
+############################################}
+{% if trunk_port is defined and trunk_port %}
+{% if trunk_port.range is defined and trunk_port.range %}
+{% for trange in trunk_port.range %}
+interface range eth{{trange.start}}-{{trange.end}}
+{% if trange.state == "present" %}
+ description "{{ trange.desc }}"
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu {{ phy_mtu }}
+ no shutdown
+{% elif trange.state == "absent" %}
+ no description
+ no switchport trunk allowed vlan 1-4094
+ mtu {{ phy_mtu }}
+ shutdown
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% if trunk_port.port_indiv is defined and trunk_port.port_indiv %}
+{% for tport in trunk_port.port_indiv %}
+interface eth{{tport.id}}
+{% if tport.state == "present" %}
+ description "{{ tport.desc }} {{tport.id}}"
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu {{ phy_mtu }}
+ no shutdown
+{% elif tport.state == "absent" %}
+ no description
+ no switchport trunk allowed vlan 1-4094
+ mtu {{ phy_mtu }}
+ shutdown
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% endif %}

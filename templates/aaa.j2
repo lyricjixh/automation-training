@@ -1,0 +1,36 @@
+{###########################################
+
+Purpose:
+Generating AAA Configuration
+############################################}
+{% if aaa.authentication is defined and aaa.authentication %}
+{% if aaa.authentication.login is defined and aaa.authentication.login %}
+aaa authentication login console local
+aaa authentication login default {{ aaa.authentication.login|join(' ') }}
+{% endif %}
+{% if aaa.authentication.enable is defined and aaa.authentication.enable %}
+aaa authentication enable default {{ aaa.authentication.login|join(' ') }}
+{% endif %}
+{% endif %}
+{% if aaa.authorization is defined and aaa.authorization %}
+{% if aaa.authorization.commands is defined and aaa.authorization.commands %}
+aaa authorization commands all default {{ aaa.authorization.commands|join(' ') }}
+{% endif %}
+{% if aaa.authorization.exec is defined and aaa.authorization.exec %}
+aaa authorization exec default {{ aaa.authorization.exec|join(' ') }}
+{% endif %}
+{% endif %}
+{% if aaa.accounting is defined and aaa.accounting %}
+aaa accounting exec console start-stop logging
+aaa accounting commands all console start-stop logging
+{% if aaa.accounting.system is defined and aaa.accounting.system %}
+aaa accounting system default start-stop {{ aaa.accounting.commands|join(' ') }} logging
+{% endif %}
+{% if aaa.accounting.commands is defined and aaa.accounting.commands %}
+aaa accounting commands all default start-stop {{ aaa.accounting.commands|join(' ') }} logging
+{% endif %}
+{% if aaa.accounting.exec is defined and aaa.accounting.exec %}
+aaa accounting exec default start-stop {{ aaa.accounting.exec|join(' ') }} logging
+{% endif %}
+{% endif %}
+

@@ -1,0 +1,50 @@
+! Startup-config last modified at Tue Jun 13 23:57:08 2023 by root
+! device: spine02 (cEOSLab, EOS-4.28.4M-29408825.4284M (engineering build))
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret sha512 $6$FwqUg04p8LznHflw$Rw81hk7Z1MwV66cN7uqeKjznW58K6zauf4Ej2cvU6zvJJTEMCVmqRZCquikHCOVEOcFH.f7ffprgKCxA8w2ry0
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname spine02
+!
+spanning-tree mode mstp
+!
+vrf instance MGMT
+!
+management api http-commands
+   no shutdown
+!
+management api gnmi
+   transport grpc default
+      vrf MGMT
+!
+management api netconf
+   transport ssh default
+      vrf MGMT
+!
+interface Ethernet1
+!
+interface Ethernet2
+!
+interface Ethernet3
+!
+interface Ethernet4
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Management0
+   vrf MGMT
+   ip address 172.100.100.102/24
+!
+no ip routing
+no ip routing vrf MGMT
+!
+ip route vrf MGMT 0.0.0.0/0 172.100.100.1
+!
+end

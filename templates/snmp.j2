@@ -1,0 +1,80 @@
+{###########################################
+
+Purpose:
+Generating SNMP Configuration
+############################################}
+{% if snmp is defined and snmp %}
+{% if snmp.contact is defined and snmp.contact %}
+snmp-server contact "{{ snmp.contact }}"
+{% endif %}
+{% if snmp.location is defined and snmp.location %}
+snmp-server location {{ snmp.location }}
+{% endif %}
+!
+{% if snmp.view is defined and snmp.view %}
+{% for view in snmp.view %}
+snmp-server view {{ view.name }} {{ view.oid }} {{ view.action }}
+{% endfor %}
+{% endif %}
+!
+{% for group in snmp.group %}
+{% if group.version|lower == "2c" %}
+snmp-server group {{ group.name }} v{{ group.version }} {{ group.views|join(' ')}}
+{% elif group.version|lower == "3" %}
+snmp-server group {{ group.name }} v{{ group.version }} {{ group.auth}} {{ group.views|join(' ')}}
+{% endif %}
+{% endfor %}
+!
+{% if snmp.community is defined and snmp.community %}
+{% for comm in snmp.community %}
+snmp-server community {{ comm.name }} {{ comm.priv }} {{ comm.acl }}
+{% endfor %}
+{% endif %}
+!
+{% if snmp.user is defined and snmp.user %}
+{% for user in snmp.user %}
+{% if user.version|lower == "3" %}
+snmp-server user {{ user.name }} {{ user.group }} v3 auth {{ user.auth }} {{ user.password }} priv {{ user.encry }} {{ user.password }} 
+{% else %}
+snmp-server user {{ user.name }} {{ user.group }} v2c
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% for host in snmp.host %}
+{% if host.version|lower == "2c" %}
+{% if host.vrf %}
+snmp-server host {{ host.addr }} vrf {{ host.vrf }} version 2c {{ host.community }}
+{% else %}
+snmp-server host {{ host.addr }} version 2c {{ host.community }}
+{% endif %}
+{% elif host.version|lower == "3" %}
+{% if host.vrf %}
+snmp-server host {{ host.addr }} vrf {{ host.vrf }} version 3 {{ host.auth }} {{ host.user }}
+{% else %}
+snmp-server host {{ host.addr }} version 3 {{ host.auth }} {{ host.user }}
+{% endif %}
+{% endif %}
+{% endfor %}
+!
+{% if snmp.traps is defined and snmp.traps %}
+{% for trap in snmp.traps %}
+{% if trap.type %}
+{% for type in trap.type %}
+snmp-server enable traps {{ trap.category }} {{ type }}
+{% endfor %}
+{% else %}
+snmp-server enable traps {{ trap.category }}
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+{% if snmp.src_intf %}
+{% if snmp.vrf %}
+snmp-server vrf {{ snmp.vrf }} local-interface {{ snmp.src_intf }}
+{% else %}
+snmp-server local-interface {{ snmp.src_intf }}
+{% endif %}
+{% endif %}
+!
+{% endif %}

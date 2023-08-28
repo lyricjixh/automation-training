@@ -1,0 +1,16 @@
+{###########################################
+
+Purpose:
+Generating Physical Southbound Interface Configuration
+including: Computing facing port
+############################################}
+{% if breakout is defined and breakout %}
+{% for breakrange in breakout %}
+interface range Eth 1/{{breakrange.start}}/1-1/{{breakrange.end}}/4
+ description "{{breakrange.type}} breakout port"
+ switchport trunk allowed vlan {{ trunk_port.vlan_list | join(',') }}
+ mtu 9216
+ no shutdown
+!
+{% endfor %}
+{% endif %}

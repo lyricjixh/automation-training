@@ -1,0 +1,80 @@
+{###########################################
+
+Purpose:
+Generating Multitanency VRF Intance Configuration
+############################################}
+{% if evpn is defined and evpn %}
+{% for vrfi in evpn.vrf %}
+{% if vrfi.proto is defined and vrfi.proto %}
+{% if vrfi.proto.static_v4 is defined and vrfi.proto.static_v4 %}
+{% for route in vrfi.proto.static_v4 %}
+ip route vrf {{ vrfi.name }} {{ route.dest }} {{ route.nh }}
+{% endfor %}
+{% endif %}
+!
+{% if vrfi.proto.static_v6 is defined and vrfi.proto.static_v6 %}
+{% for route in vrfi.proto.static_v6 %}
+ipv6 route vrf {{ vrfi.name }} {{ route.dest }} {{ route.nh }}
+{% endfor %}
+{% endif %}
+{% endif %}
+!
+{% endfor %}
+router bgp {{ bgp.local_as }}
+{% for vrfi in evpn.vrf %}
+  vrf {{ vrfi.name }}
+    rd {{ vrfi.rd_pfx }}:{{ vrfi.l3_vni.id }}
+{% if vrfi.rt_pfx is defined and vrfi.rt_pfx %}
+    route-target import evpn {{ vrfi.rt_pfx }}:{{ vrfi.l3_vni.id }}
+    route-target export evpn {{ vrfi.rt_pfx }}:{{ vrfi.l3_vni.id }}
+{% endif %}
+{% if vrfi.rleak_rules is defined and vrfi.rleak_rules %}
+    route-target import evpn {{ vrfi.rleak_rules.rt_import }}
+    route-target export evpn {{ vrfi.rleak_rules.rt_export }}
+{% if vrfi.rleak_rules.rmap_out is defined and vrfi.rleak_rules.rmap_out %}
+    route-target export evpn route-map {{ vrfi.rleak_rules.rmap_out }}
+{% endif %}
+{% if vrfi.rleak_rules.rmap_in is defined and vrfi.rleak_rules.rmap_in %}
+    route-target import evpn route-map {{ vrfi.rleak_rules.rmap_in }}
+{% endif %}
+    !
+{% if vrfi.redistribute is defined and vrfi.redistribute %}
+{% for redist in vrfi.redistribute %}
+{% if redist.r_map is defined and redist.r_map %}
+    redistribute {{ redist.proto }} route-map {{ redist.r_map }}
+{% else %}
+    redistribute {{ redist.proto }}
+{% endif %}
+{% endfor %}
+    !
+{% endif %}
+{% if vrfi.proto.bgp.gw_peer_v4 is defined and vrfi.proto.bgp.gw_peer_v4 %}
+{% for gwpeer in vrfi.proto.bgp.gw_peer_v4 %}
+    neighbor {{ gwpeer.addr }} remote-as {{ gwpeer.asn }}
+    neighbor {{ gwpeer.addr }} allowas-in 2
+    !
+{% endfor %}
+    address-family ipv4
+{% for gwpeer in vrfi.proto.bgp.gw_peer_v4 %}
+      neighbor {{ gwpeer.addr }} activate
+{% endfor %}
+    !
+{% endif %}
+{% if vrfi.proto.bgp.gw_peer_v6 is defined and vrfi.proto.bgp.gw_peer_v6 %}
+{% for gwpeer in vrfi.proto.bgp.gw_peer_v6 %}
+    neighbor {{ gwpeer.addr }} remote-as {{ gwpeer.asn }}
+    neighbor {{ gwpeer.addr }} allowas-in 2
+    !
+{% endfor %}
+    address-family ipv6
+{% for gwpeer in vrfi.proto.bgp.gw_peer_v6 %}
+      neighbor {{ gwpeer.addr }} activate
+{% endfor %}
+    !
+{% endif %}
+    !
+{% endif %}
+  !
+{% endfor %}
+!
+{% endif %}

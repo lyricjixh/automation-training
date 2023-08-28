@@ -1,0 +1,49 @@
+{###########################################
+
+Purpose:
+Generating Initial Configuration
+############################################}
+{% if domain is defined and domain %}
+hostname {{ hostname }}.{{ domain.name }}
+{% else %}
+hostname {{ hostname }}
+{% endif %}
+!
+no aaa root
+!
+hardware counter feature vtep encap
+hardware counter feature vtep decap
+!
+dhcp relay
+   tunnel requests disabled
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+service unsupported-transceiver FABRICPHXLab 435c6d8a
+!
+{% if timezone is defined and timezone %}
+clock timezone {{ timezone }}
+{% endif %}
+!
+username arista secret 0 {{ vault_lab_password }}
+username lab secret 0 {{ vault_lab_password }}
+!
+{% if mgmt_vrf is defined and mgmt_vrf %}
+vrf instance {{ mgmt_vrf }}
+!
+{% endif %}
+interface management {{ mgmt_intf }}
+ description OOB Managment Port
+{% if mgmt_vrf is defined and mgmt_vrf %}
+ vrf forwarding {{ mgmt_vrf }} 
+{% endif %}
+ ip address {{ ansible_host }}/{{ oob_ipv4_mask }}
+!
+{% if mgmt_vrf is defined and mgmt_vrf %}
+ip route vrf {{ mgmt_vrf }} 0.0.0.0/0 {{ oob_netv4_gw }}
+{% else %}
+ip route 0.0.0.0/0 {{ oob_netv4_gw }}
+!
+{% endif %}

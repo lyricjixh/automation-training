@@ -1,0 +1,67 @@
+# Location:
+rack_no: 2
+
+vxlan_rvtep:
+    - 10.10.0.1
+    - 10.10.0.3
+
+vxlan_id_prx: "10"
+vxlans:
+#   id_prx: "10"
+#    - 
+#         desc: << descirption of Vlan func, optional>>
+#         vlan: << vlan id, mandate>>
+#         netv4: << Preassigned network block, optional >>
+#         netv6: << Preassigned network block, optional >>
+#         vrf: << VRF name the vlan belong to, mandate >>
+#         state: << state value, [present|absence], mandate >>
+    - 
+        desc: "overlay_vlan"
+        vlan: "101"
+        netv4: "{{ v101_netv4 }}"
+        netv6: "{{ v101_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v101_mcast }}"
+            local_intf: "Loopback101"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v101_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "141"
+        # netv4: "{{ v141_netv4 }}"
+        # netv6: "{{ v141_netv6 }}"
+        vrf: "BMS-subnet"
+        helper_addrv4: "{{ v141_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "201"
+        netv4: "{{ v201_netv4 }}"
+        netv6: "{{ v201_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v201_mcast }}"
+            local_intf: "Loopback201"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v201_helper }}"
+        state: "present"
+    - 
+        desc: "overlay_vlan"
+        vlan: "202"
+        netv4: "{{ v202_netv4 }}"
+        netv6: "{{ v202_netv6 }}"
+        vrf: "BMS-subnet"
+        mcast:
+            igmp: "yes"
+            l2_group: "{{ v202_mcast }}"
+            local_intf: "Loopback202"
+            pim_mode:
+            pim_attri:
+        helper_addrv4: "{{ v202_helper }}"
+        state: "present"

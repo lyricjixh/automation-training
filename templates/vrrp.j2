@@ -1,0 +1,18 @@
+{##################################################
+
+Purpose:
+Generating VRRP Underlay Configuration
+###################################################}
+{% if vrrp is defined and vrrp %}
+{% for group in vrrp.group %}
+interface Eth {{ group.intf }}
+{% if group.vrf_instance %}
+ ip vrf forwarding Vrf_{{ group.vrf_instance }}
+{% endif %}
+ ip address {{ group.addr_v4 }}
+ vrrp {{ group.id }} address-family {{ group.type }}
+ vip {{ group.vip }}
+ mtu {{ vxlan_mtu }}
+exit
+{% endfor %}
+{% endif %}

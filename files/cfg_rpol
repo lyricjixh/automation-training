@@ -1,0 +1,535 @@
+!
+ip as-path regex-mode string
+ip as-path access-list 400 permit ^$ any
+ip as-path access-list 400 permit ^46385$ any
+ip as-path access-list CENTURYLINK-BGP-TE-50 permit _139345$ any
+ip as-path access-list CENTURYLINK-BGP-TE-50 permit _3816$ any
+ip as-path access-list CENTURYLINK-BGP-TE-50 permit _7018$ any
+ip as-path access-list CENTURYLINK-BGP-TE-500 permit _3462$ any
+ip as-path access-list COGENT-BGP-TE-50 permit _7018$ any
+ip as-path access-list COGENT-BGP-TE-500 permit _2516$ any
+ip as-path access-list IPv6-ASPATH-FILTER permit ^$ any
+ip as-path access-list SS-ASN permit ^46385$ any
+ip as-path access-list SS-ATTACHED-CUSTOMERS permit ^46385_ any
+ip as-path access-list SS-INJECT permit ^$ any
+ip as-path access-list SS-INJECT deny ^12189$ any
+ip as-path access-list SS-INJECT permit ^[0-9]+$ any
+ip community-list 110 permit 174:3000
+ip community-list 110 permit 174:990
+ip community-list CWIE-NETWORKS-COMMUNITY permit 46385:888
+ip community-list FABRIC-ADVERTISED-LOCAL-ONLY permit 12189:200
+ip community-list regexp REMOVE-NO-EXPORT permit no-export
+ip community-list SS-ATTACHED-CUSTOMERS-COMMUNITY permit 65534:1
+ip community-list regexp TO-RR permit _12189:100.._
+ip community-list regexp TO-RR permit _12189:9..._
+ip community-list regexp TO-TRANSPORT permit _12189:9..._
+ip community-list regexp TO-TRANSPORT permit _12189:10..._
+!
+ip prefix-list BLACKHOLE
+   seq 10 permit 0.0.0.0/0 ge 32
+!
+ip prefix-list BOGON
+   seq 10 permit 10.0.0.0/8 le 32
+   seq 20 permit 127.0.0.0/8 le 32
+   seq 30 permit 169.254.0.0/16 le 32
+   seq 40 permit 172.16.0.0/12 le 32
+   seq 50 permit 192.168.0.0/16 le 32
+!
+ip prefix-list CCBILLCOM-HOST-ROUTE
+   seq 5 permit 64.38.231.216/32
+!
+ip prefix-list DEFAULT-ONLY
+   seq 10 permit 0.0.0.0/0
+!
+ip prefix-list INTERNAL-IP-CONNECTED
+!
+ip prefix-list INTERNAL-IPv6-CONNECTED
+!
+!
+ip prefix-list PUBLIC-FABRIC-SEA
+   seq 20 permit 131.153.61.0/24
+!
+ip prefix-list SEA-PREF-LOCAL-ONLY
+   seq 5 permit 131.153.84.0/24
+!
+ip prefix-list SLASH32
+   seq 10 deny 0.0.0.0/32
+   seq 20 permit 0.0.0.0/0 ge 32
+!
+ip prefix-list SS-FILTER
+   seq 10 permit 0.0.0.0/0 le 31
+!
+ip prefix-list kentik-noreceive
+   seq 2 permit 0.0.0.0/0 ge 32
+   seq 4 deny 0.0.0.0/0 le 31
+!
+ipv6 prefix-list BLACKHOLE-IPv6
+   seq 10 permit ::/0 ge 128
+!
+ipv6 prefix-list IPv6-BOGON
+   seq 10 permit fec0::/18 le 32
+   seq 20 permit fc00::/7 le 32
+   seq 30 permit ::ffff:0.0.0.0/96
+   seq 40 permit ::/96
+   seq 50 permit 2001:10::/28 le 32
+   seq 60 permit 2001:db8::/32 le 32
+   seq 70 permit fe80::/10 le 32
+   seq 80 permit fec0::/10 le 32
+   seq 90 permit ff00::/8 le 32
+   seq 100 permit 2002::/24 le 32
+   seq 110 permit 2002:a00::/24 le 32
+   seq 120 permit 2002:7f00::/24 le 32
+   seq 130 permit 2002:a9fe::/32
+   seq 140 permit 2002:ac10::/28 le 32
+   seq 150 permit 2002:c000::/40
+   seq 160 permit 2002:c000:200::/40
+   seq 170 permit 2002:c0a8::/32
+   seq 180 permit 2002:c612::/31 le 32
+   seq 190 permit 2002:c633:6400::/40
+   seq 200 permit 2002:cb00:7100::/40
+   seq 210 permit 2002:e000::/20 le 32
+   seq 220 permit 2002:f000::/20 le 32
+   seq 230 permit 2002:ffff:ffff::/48
+   seq 240 permit 2001::/40
+   seq 250 permit 2001:0:a00::/40
+   seq 260 permit 2001:0:7f00::/40
+   seq 270 permit 2001:0:a9fe::/48
+   seq 280 permit 2001:0:ac10::/44
+   seq 290 permit 2001:0:c000::/56
+   seq 300 permit 2001:0:c000:200::/56
+   seq 310 permit 2001:0:c0a8::/48
+   seq 320 permit 2001:0:c612::/47
+   seq 330 permit 2001:0:c633:6400::/56
+   seq 340 permit 2001:0:cb00:7100::/56
+   seq 350 permit 2001:0:e000::/36
+   seq 360 permit 2001:0:f000::/36
+   seq 370 permit 2001:0:ffff:ffff::/64
+!
+ipv6 prefix-list IPv6-CIDR-48-MAX-PREFIX
+   seq 10 permit ::/0 ge 16 le 47
+   seq 20 permit ::/0
+!
+ipv6 prefix-list IPv6-DEFAULT-ONLY
+   seq 10 permit ::/0
+!
+ipv6 prefix-list LOCAL-SLASH128
+   seq 10 deny ::/0 ge 128
+   seq 20 permit 2607:ff00:900::/40 ge 128
+   seq 30 permit 2607:6000:900::/40 ge 128
+   seq 40 permit 2607:6003:2309::/48 ge 128
+!
+!
+ipv6 prefix-list kentik-noreceive
+   seq 10 permit ::/0 ge 128
+   seq 20 deny ::/0 le 127
+!
+route-map BGP-IPv6-GENERIC-GROUP-IN deny 10
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map BGP-IPv6-GENERIC-GROUP-IN permit 100
+   match ipv6 address prefix-list IPv6-CIDR-48-MAX-PREFIX
+!
+route-map BGP-IPv6-GENERIC-GROUP-OUT deny 10
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map BGP-IPv6-GENERIC-GROUP-OUT permit 20
+   match as-path IPv6-ASPATH-FILTER
+!
+route-map BGP-IPv6-GENERIC-GROUP-OUT deny 100
+!
+route-map BGP-REDISTR-STATIC deny 10
+   match ip address prefix-list BOGON
+!
+route-map BGP-REDISTR-STATIC deny 20
+   match ipv6 address prefix-list IPv6-BOGO
+!
+route-map BGP-REDISTR-STATIC permit 30
+   match ip address prefix-list BLACKHOLE
+   match tag 666
+   set origin igp
+   set local-preference 500
+   set community 174:990 174:3000 209:0 1299:999 1299:2009 1299:5009 1299:7009 2914:666 3257:666 3257:26                                                                                                           66 3356:123 3356:666 3356:9999 3549:600 3549:666 6461:5990 6762:666 7385:640 7385:666 7922:666 9002:666                                                                                                            12189:0 12189:999 12956:666 17819:666 19181:9 19181:301 22773:666 31042:999 32421:999 38930:666 64666:0                                                                                                            64999:0 65000:0 65009:0
+!
+route-map BGP-REDISTR-STATIC permit 40
+   match ipv6 address prefix-list BLACKHOLE-IPv6
+   match tag 666
+   set origin igp
+   set local-preference 500
+   set community 174:990 174:3000 209:0 1299:999 1299:2009 1299:5009 1299:7009 2914:666 3257:666 3257:26                                                                                                           66 3356:123 3356:666 3356:9999 3549:600 3549:666 6461:5990 6762:666 7385:640 7385:666 7922:666 9002:666                                                                                                            12189:0 12189:999 12956:666 17819:666 19181:9 19181:301 22773:666 31042:999 32421:999 38930:666 64666:0                                                                                                            64999:0 65000:0 65009:0
+!
+route-map BGP-WANGUARD-FILTER-SERVER-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map BGP-WANGUARD-FILTER-SERVER-IN deny 15
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map BGP-WANGUARD-FILTER-SERVER-IN permit 100
+   match ip address prefix-list SLASH32
+   set local-preference 750
+!
+route-map BGP-WANGUARD-FILTER-SERVER-IN permit 105
+   match ipv6 address prefix-list LOCAL-SLASH128
+   set local-preference 750
+!
+route-map BGP-WANGUARD-FILTER-SERVER-IN permit 110
+   match ipv6 address prefix-list BLACKHOLE-IPv6
+   set local-preference 750
+!
+route-map BGP-WANGUARD-NULL-SERVER-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map BGP-WANGUARD-NULL-SERVER-IN permit 100
+   match ip address prefix-list SLASH32
+   set local-preference 800
+!
+route-map BGP-WANGUARD-NULL-SERVER-IN permit 110
+   match ipv6 address prefix-list BLACKHOLE-IPv6
+   set local-preference 800
+!
+route-map CENTURYLINK-BGP-PEER-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map CENTURYLINK-BGP-PEER-IN deny 50
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map CENTURYLINK-BGP-PEER-IN permit 100
+   match as-path CENTURYLINK-BGP-TE-50
+   set local-preference 50
+!
+route-map CENTURYLINK-BGP-PEER-IN permit 200
+   match as-path CENTURYLINK-BGP-TE-500
+   set local-preference 500
+!
+route-map CENTURYLINK-BGP-PEER-IN permit 1000
+!
+route-map CENTURYLINK-BGP-PEER-OUT deny 10
+   match ip address prefix-list BOGON
+!
+route-map CENTURYLINK-BGP-PEER-OUT deny 50
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map CENTURYLINK-BGP-PEER-OUT deny 100
+   match community CENTURYLINK-DENY
+!
+route-map CENTURYLINK-BGP-PEER-OUT permit 150
+   match as-path 400
+   match community PREPEND-1
+   set as-path prepend 12189
+!
+route-map CENTURYLINK-BGP-PEER-OUT permit 200
+   match as-path 400
+   match community PREPEND-2
+   set as-path prepend 12189 12189
+!
+route-map CENTURYLINK-BGP-PEER-OUT permit 250
+   match as-path 400
+   match community PREPEND-3
+   set as-path prepend 12189 12189 12189
+!
+route-map CENTURYLINK-BGP-PEER-OUT permit 300
+   match as-path 400
+   match community PREPEND-4
+   set as-path prepend 12189 12189 12189 12189
+!
+route-map CENTURYLINK-BGP-PEER-OUT permit 1000
+   match as-path 400
+!
+route-map CENTURYLINK-BGP-PEER-OUT deny 2000
+!
+route-map COGENT-BGP-BLACKHOLE-IN deny 10
+!
+route-map COGENT-BGP-BLACKHOLE-OUT deny 10
+   match ip address prefix-list BOGON
+!
+route-map COGENT-BGP-BLACKHOLE-OUT permit 100
+   match community 110
+!
+route-map COGENT-BGP-PEER-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map COGENT-BGP-PEER-IN deny 50
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map COGENT-BGP-PEER-IN permit 100
+   match as-path COGENT-BGP-TE-50
+   set local-preference 50
+!
+route-map COGENT-BGP-PEER-IN permit 200
+   match as-path COGENT-BGP-TE-500
+   set local-preference 500
+!
+route-map COGENT-BGP-PEER-IN permit 1000
+!
+route-map COGENT-BGP-PEER-OUT deny 10
+   match ip address prefix-list BOGON
+!
+route-map COGENT-BGP-PEER-OUT deny 50
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map COGENT-BGP-PEER-OUT deny 100
+   match community COGENT-DENY
+!
+route-map COGENT-BGP-PEER-OUT permit 110
+   match ip address prefix-list FABRIC-GLOBAL
+   continue
+   set community 46385:889 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 115
+   match ip address prefix-list FABRIC-GLOBAL-BLACKHOLE
+   match tag 999
+   continue
+   set community 46385:999 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 120
+   match ip address prefix-list FABRIC-GLOBAL-PHX
+   continue
+   set community 46385:884 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 125
+   match ip address prefix-list FABRIC-GLOBAL-ASH
+   continue
+   set community 46385:886 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 130
+   match ip address prefix-list FABRIC-GLOBAL-LA
+   continue
+   set community 46385:888 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 135
+   match ip address prefix-list FABRIC-GLOBAL-NLD
+   continue
+   set community 46385:885 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 140
+   match ip address prefix-list FABRIC-GLOBAL-ATL
+   continue
+   set community 46385:883 additive
+!
+route-map COGENT-BGP-PEER-OUT permit 150
+   match as-path 400
+   match community PREPEND-1
+   set as-path prepend 12189
+!
+route-map COGENT-BGP-PEER-OUT permit 200
+   match as-path 400
+   match community PREPEND-2
+   set as-path prepend 12189 12189
+!
+route-map COGENT-BGP-PEER-OUT permit 250
+   match as-path 400
+   match community PREPEND-3
+   set as-path prepend 12189 12189 12189
+!
+route-map COGENT-BGP-PEER-OUT permit 300
+   match as-path 400
+   match community PREPEND-4
+   set as-path prepend 12189 12189 12189 12189
+!
+route-map COGENT-BGP-PEER-OUT permit 1000
+   match as-path 400
+!
+route-map ISP-GENERIC-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map ISP-GENERIC-IN permit 100
+!
+route-map ISP-GENERIC-OUT deny 10
+   match ip address prefix-list BOGON
+!
+route-map ISP-GENERIC-OUT deny 20
+   match community CWIE-NETWORKS-COMMUNITY
+!
+route-map ISP-GENERIC-OUT permit 100
+   match as-path 400
+!
+route-map NULL-CONNECTED deny 10
+   match ip address prefix-list BOGON
+!
+route-map NULL-CONNECTED permit 20
+   match ip address prefix-list INTERNAL-IP-CONNECTED
+   set community 174:990 174:3000 209:0 1299:999 1299:2009 1299:5009 1299:7009 2914:666 3257:666 3257:26                                                                                                           66 3356:123 3356:666 3356:9999 3549:600 3549:666 6461:5990 6762:666 7385:640 7385:666 7922:666 9002:666                                                                                                            12189:0 12189:999 12956:666 17819:666 19181:9 19181:301 22773:666 31042:999 32421:999 38930:666 64666:0                                                                                                            64999:0 65000:0 65009:0
+!
+route-map NULL-CONNECTED deny 100
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map NULL-CONNECTED permit 120
+   match ipv6 address prefix-list INTERNAL-IPv6-CONNECTED
+   set community 174:990 174:3000 209:0 1299:999 1299:2009 1299:5009 1299:7009 2914:666 3257:666 3257:26                                                                                                           66 3356:123 3356:666 3356:9999 3549:600 3549:666 6461:5990 6762:666 7385:640 7385:666 7922:666 9002:666                                                                                                            12189:0 12189:999 12956:666 17819:666 19181:9 19181:301 22773:666 31042:999 32421:999 38930:666 64666:0                                                                                                            64999:0 65000:0 65009:0
+!
+route-map FABRIC-CORE-BGP-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map FABRIC-CORE-BGP-IN permit 100
+   match as-path SS-ASN
+   set local-preference 1100
+   set community 12189:10000 additive
+!
+route-map FABRIC-CORE-BGP-IN permit 200
+   match as-path SS-ATTACHED-CUSTOMERS
+   match community SS-ATTACHED-CUSTOMERS-COMMUNITY
+   set local-preference 1100
+!
+route-map FABRIC-CORE-BGP-IN permit 300
+   match ip address prefix-list SLASH32
+   match community WANGUARD-BH
+   set local-preference 1100
+!
+route-map FABRIC-CORE-BGP-OUT permit 10
+   match ip address prefix-list DEFAULT-ONLY
+!
+route-map FABRIC-CORE-BGP-OUT permit 15
+   match ipv6 address prefix-list IPv6-DEFAULT-ONLY
+!
+route-map FABRIC-CORE-BGP-OUT deny 100
+!
+route-map FABRIC-EDGE-BGP-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map FABRIC-EDGE-BGP-IN deny 15
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map FABRIC-EDGE-BGP-IN permit 20
+   match ip address prefix-list DEFAULT-ONLY
+!
+route-map FABRIC-EDGE-BGP-IN permit 30
+   match ipv6 address prefix-list IPv6-DEFAULT-ONLY
+!
+route-map FABRIC-EDGE-BGP-IN permit 100
+   match ip address prefix-list SS-FILTER
+!
+route-map FABRIC-EDGE-BGP-OUT permit 40
+   match ip address prefix-list FABRIC-GLOBAL
+   continue
+   set community 46385:889 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 50
+   match ip address prefix-list FABRIC-GLOBAL-BLACKHOLE
+   match tag 999
+   continue
+   set community 46385:999 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 51
+   match ip address prefix-list FABRIC-GLOBAL-PHX
+   continue
+   set community 46385:884 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 55
+   match ip address prefix-list FABRIC-GLOBAL-ASH
+   continue
+   set community 46385:886 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 60
+   match ip address prefix-list FABRIC-GLOBAL-LA
+   continue
+   set community 46385:888 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 65
+   match ip address prefix-list FABRIC-GLOBAL-NLD
+   continue
+   set community 46385:885 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 70
+   match ip address prefix-list FABRIC-GLOBAL-ATL
+   continue
+   set community 46385:883 additive
+!
+route-map FABRIC-EDGE-BGP-OUT permit 100
+   match as-path 400
+!
+route-map SC-BGP-PEER-OUT deny 10
+   match ip address prefix-list BOGON
+   continue
+!
+route-map SC-BGP-PEER-OUT permit 20
+   match ip address prefix-list SEA-PREF-LOCAL-ONLY
+   continue
+   set community 12189:200
+!
+route-map SPN-BMC-OUT deny 10
+   match ip address prefix-list BOGON
+!
+route-map SPN-BMC-OUT permit 100
+   match ip address prefix-list DEFAULT-ONLY
+!
+route-map SS-INJECT-IN deny 10
+!
+route-map SS-INJECT-OUT permit 10
+   match as-path SS-INJECT
+!
+route-map TELIA-BGP-PEER-IN deny 10
+   match ip address prefix-list BOGON
+!
+route-map TELIA-BGP-PEER-IN deny 50
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map TELIA-BGP-PEER-IN permit 100
+   match as-path TELIA-BGP-TE-50
+   set local-preference 50
+!
+route-map TELIA-BGP-PEER-IN permit 200
+   match as-path TELIA-BGP-TE-500
+   set local-preference 500
+!
+route-map TELIA-BGP-PEER-IN permit 1000
+!
+route-map TELIA-BGP-PEER-OUT deny 10
+   match ip address prefix-list BOGON
+!
+route-map TELIA-BGP-PEER-OUT deny 50
+   match ipv6 address prefix-list IPv6-BOGON
+!
+route-map TELIA-BGP-PEER-OUT deny 100
+   match community TELIA-DENY
+!
+route-map TELIA-BGP-PEER-OUT permit 150
+   match as-path 400
+   match community PREPEND-1
+   set as-path prepend 12189
+!
+route-map TELIA-BGP-PEER-OUT permit 200
+   match as-path 400
+   match community PREPEND-2
+   set as-path prepend 12189 12189
+!
+route-map TELIA-BGP-PEER-OUT permit 250
+   match as-path 400
+   match community PREPEND-3
+   set as-path prepend 12189 12189 12189
+!
+route-map TELIA-BGP-PEER-OUT permit 300
+   match as-path 400
+   match community PREPEND-4
+   set as-path prepend 12189 12189 12189 12189
+!
+route-map TELIA-BGP-PEER-OUT permit 1000
+   match as-path 400
+!
+route-map US-NO-EXPORT permit 10
+   set community 12189:9000
+!
+route-map US-RR-IN permit 100
+!
+route-map US-RR-OUT permit 10
+   match as-path 400
+   match community TO-RR
+   set ip next-hop 10.110.14.1
+!
+route-map US-RR-OUT permit 20
+   match community TO-RR
+!
+route-map US-TRANSPORT-OUT permit 10
+   match as-path 400
+   match community TO-TRANSPORT
+   set community community-list REMOVE-NO-EXPORT delete
+   set ip next-hop 10.110.14.1
+!
+route-map US-TRANSPORT-OUT permit 20
+   match community TO-TRANSPORT
+   set community community-list REMOVE-NO-EXPORT delete
+!
+route-map WANGUARD-SERVER-IN permit 10
+   match ip address prefix-list SLASH32
+   set community 174:990 174:3000 209:0 1299:999 1299:2009 1299:5009 1299:7009 2914:666 3257:666 3257:26                                                                                                           66 3356:123 3356:666 3356:9999 3549:600 3549:666 6461:5990 6762:666 7385:640 7385:666 7922:666 9002:666                                                                                                            12189:0 12189:999 12956:666 17819:666 19181:9 19181:301 22773:666 31042:999 32421:999 38930:666 64666:0                                                                                                            64999:0 65000:0 65009:0
+!
+route-map WANGUARD-SERVER-IN deny 100
+!

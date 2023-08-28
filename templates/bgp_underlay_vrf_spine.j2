@@ -1,0 +1,110 @@
+{##################################################
+
+Purpose:
+Generating BGP Dual-Stack Underlay Configuration
+###################################################}
+router bgp {{ edge_asn }}
+  router-id {{ lpbk_ulay.addr_v4 }}
+  bgp bestpath as-path multipath-relax
+  bgp log-neighbor-changes
+  maximum-paths 4 ecmp 4
+  no bgp bestpath ecmp-fast
+  !
+  neighbor fabric_peer_v4 peer group
+{# neighbor fabric_peer_v4 advertisement-interval 5 #}
+  neighbor fabric_peer_v4 timers 3 9
+{# neighbor fabric_peer_v4 capability extended-nexthop #}
+  neighbor fabric_peer_v4 bfd
+  neighbor fabric_peer_v4 allowas-in
+  neighbor fabric_peer_v4 send-community standard extended
+  !
+  neighbor dc_gw_v4 peer group
+{# neighbor dc_gw_v4 advertisement-interval 5 #}
+  neighbor dc_gw_v4 timers 3 9
+{# neighbor dc_gw_v4 capability extended-nexthop #}
+  neighbor dc_gw_v4 bfd
+  neighbor dc_gw_v4 allowas-in
+  neighbor dc_gw_v4 remote-as {{ bgp.sas_as }}
+  neighbor dc_gw_v4 send-community standard extended
+  !
+  neighbor fabric_peer_v6 peer group
+{# neighbor fabric_peer_v6 advertisement-interval 5 #}
+  neighbor fabric_peer_v6 timers 3 9
+{# neighbor fabric_peer_v6 capability extended-nexthop #}
+  neighbor fabric_peer_v6 bfd
+  neighbor fabric_peer_v6 allowas-in
+  !
+  neighbor dc_gw_v6 peer group
+{# neighbor dc_gw_v6 advertisement-interval 5 #}
+  neighbor dc_gw_v6 timers 3 9
+{# neighbor dc_gw_v6 capability extended-nexthop #}
+  neighbor dc_gw_v6 bfd
+  neighbor dc_gw_v6 allowas-in
+  neighbor dc_gw_v6 remote-as {{ bgp.sas_as }}
+  !
+  address-family ipv4
+{% if bgp.afi.ipv4 is defined and bgp.afi.ipv4 %}
+{% for redis in bgp.afi.ipv4 %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+    neighbor fabric_peer_v4 activate
+    neighbor dc_gw_v4 activate
+  !
+  address-family ipv6
+{% if bgp.afi.ipv6 is defined and bgp.afi.ipv6 %}
+{% for redis in bgp.afi.ipv6 %}
+{% if redis.r_map %}
+    redistribute {{ redis.proto }} route-map {{ redis.r_map }}
+{% else %}
+    redistribute {{ redis.proto }}
+{% endif %}
+{% endfor %}
+{% endif %}
+    neighbor fabric_peer_v6 activate
+    neighbor dc_gw_v6 activate
+  !
+  address-family evpn
+    neighbor fabric_peer_v4 activate
+    neighbor dc_gw_v4 activate
+  !
+{% if bgp.flowspec.ipv4 is defined and bgp.flowspec.ipv4|lower == "enable" %}
+  address-family flow-spec ipv4
+    neighbor fabric_peer_v4 activate
+    neighbor dc_gw_v4 activate
+  !
+{% endif %}
+{% if bgp.flowspec.ipv6 is defined and bgp.flowspec.ipv6|lower == "enable" %}
+  address-family flow-spec ipv6
+    neighbor fabric_peer_v6 activate
+    neighbor dc_gw_v6 activate
+  !
+{% endif %}
+  vrf SPINE
+    local-as {{ bgp.local_as }}
+    update wait-install
+    distance bgp 20 200 1
+    maximum-paths 8
+{% for peer in bgp.fabric_peer_v4 %}
+    neighbor {{ peer }} description "leaf peer"
+    neighbor {{ peer }} peer group fabric_peer_v4
+    neighbor {{ peer }} remote-as {{ bgp.remote_as[loop.index0] }}
+    no shutdown
+    !
+{% endfor %}
+{% for peer in bgp.fabric_peer_v6 %}
+    neighbor {{ peer }} description "leaf peer"
+    neighbor {{ peer }} peer group fabric_peer_v6
+    neighbor {{ peer }} remote-as {{ bgp.remote_as[loop.index0] }}
+    no shutdown
+    !
+{% endfor %}
+  !
+!
+
+
+

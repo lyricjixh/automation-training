@@ -1,0 +1,28 @@
+{###########################################
+
+Purpose:
+Generating TACAS Plus Configuration
+############################################}
+{% if aaa_tac %}
+{% for group in aaa_tac.group %}
+{% for server in group.server %}
+{% if aaa_tac.vrf is defined and aaa_tac.vrf %}
+tacacs-server host {{ server.addr }} vrf {{ aaa_tac.vrf }} timeout {{ aaa_tac.timeout }} key 0 {{ server.key }}
+{% else %}
+tacacs-server host {{ server.addr }} timeout {{ aaa_tac.timeout }} key 0 {{ server.key }}
+{% endif %}
+{% endfor %}
+!
+aaa group server tacacs+ {{ group.name }}
+{% for server in group.server %}
+   server {{ server.addr }}
+{% endfor %}
+!
+{% endfor %}
+!
+{% if aaa_tac.vrf is defined and aaa_tac.vrf %}
+ip tacacs vrf {{ aaa_tac.vrf }} source-interface {{ aaa_tac.src_intf }}
+{% else %}
+ip tacacs source-interface {{ aaa_tac.src_intf }}
+{% endif %}
+{% endif %}

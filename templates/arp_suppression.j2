@@ -1,0 +1,10 @@
+{###########################################
+
+Purpose:
+Generating Syslog Configuration
+############################################}
+{% if evpn.arp_suppression is defined and evpn.arp_suppression %}
+router l2-vpn
+   arp proxy prefix-list {{ evpn.arp_suppression.pfx_list }}
+!
+{% endif %}

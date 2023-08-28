@@ -1,0 +1,108 @@
+{###########################################
+
+Purpose:
+ceos Modular Template
+############################################}
+{% include 'hostname.j2' %}
+!
+ip routing
+ipv6 unicast-routing
+ip routing vrf MGMT
+!
+{% if features.netserv.domain|lower == "yes" %}
+{% include 'domain.j2' %}
+{% endif %}
+{% if features.netserv.user|lower == "yes" %}
+{% include 'user.j2' %}
+{% endif %}
+{% if features.netserv.ntp|lower == "yes" %}
+{% include 'ntp.j2' %}
+{% endif %}
+{% if features.netserv.syslog|lower == "yes" %}
+{% include 'syslog.j2' %}
+{% endif %}
+{% if features.netserv.snmp|lower == "yes" %}
+{% include 'snmp.j2' %}
+{% endif %}
+{% if features.netserv.tacacs|lower == "yes" %}
+{% include 'tacacs.j2' %}
+{% endif %}
+{% if features.netserv.radius|lower == "yes" %}
+{% include 'radius.j2' %}
+{% endif %}
+{% if features.netserv.aaa|lower == "yes" %}
+{% include 'aaa.j2' %}
+{% endif %}
+{% if features.interface.layer3|lower == "yes" %}
+{% include 'intf_lpbk.j2' %}
+{% include 'intf_ptp.j2' %}
+{% endif %}
+{% if features.interface.vlan|lower == "yes" %}
+{% include 'intf_vlan.j2' %}
+{% endif %}
+{% if features.interface.stp|lower == "yes" %}
+{% include 'stp.j2' %}
+{% endif %}
+{% include 'intf_southbound.j2' %}
+{% if features.interface.mlag|lower == "yes" %}
+{% include 'mlag.j2' %}
+{% endif %}
+{% if features.interface.bond|lower == "yes" %}
+{% include 'intf_portchannel.j2' %}
+{% endif %}
+{% if features.interface.l2port|lower == "yes" %}
+{% include 'intf_l2.j2' %}
+{% endif %}
+{% if features.interface.ufd|lower == "yes" %}
+{% include 'ufd.j2' %}
+{% endif %}
+{% if features.interface.vrrp|lower == "yes" %}
+{% include 'vrrp.j2' %}
+{% endif %}
+{% if features.routing.policy|lower == "yes" %}
+{% include 'route_pol.j2' %}
+{% endif %}
+{% if features.routing.ospf|lower == "yes" %}
+{% include 'ospf.j2' %}
+{% endif %}
+{% if features.routing.bgp_stan|lower == "yes" %}
+{% include 'bgp_fabric.j2' %}
+{% endif %}
+{% if features.routing.bgp_unno|lower == "yes" %}
+{% include 'bgp_unnumbered_leaf.j2' %}
+{% endif %}
+{% if features.routing.pim|lower == "yes" %}
+{% include 'multicast.j2' %}
+{% include 'pim.j2' %}
+{% endif %}
+!
+{% if features.overlay.evpn|lower == "yes" %}
+{% include 'vrf_routing.j2' %}
+{% include 'vxlan.j2' %} 
+{% endif %}
+{% if features.overlay.pim|lower == "yes" %}
+{% include 'multicast_vrf.j2' %}
+{% include 'pim_vrf.j2' %}
+{% endif %}
+{% if features.overlay.static_vxlan|lower == "yes" %}
+{% include 'static_vxlan.j2' %}
+{% endif %}
+{% if features.security.acl|lower == "yes" %}
+{% include 'acl.j2' %}
+{% endif %}
+{% if features.security.copp|lower == "yes" %}
+{% include 'copp.j2' %}
+{% endif %}
+{% if features.security.intf|lower == "yes" %}
+{% include 'intf_acl.j2' %}
+{% endif %}
+{% if features.netserv.sflow|lower == "yes" %}
+{% include 'sflow.j2' %}
+{% endif %}
+{% if features.netserv.span|lower == "yes" %}
+{% include 'span.j2' %}
+{% endif %}
+{% if features.netserv.telemetry|lower == "yes" %}
+{% include 'telemetry.j2' %}
+{% endif %}
+!

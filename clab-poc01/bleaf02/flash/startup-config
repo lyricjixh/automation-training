@@ -1,0 +1,50 @@
+! Startup-config last modified at Tue Jun 13 23:57:05 2023 by root
+! device: bleaf02 (cEOSLab, EOS-4.28.4M-29408825.4284M (engineering build))
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret sha512 $6$KW/CAD0aDJ.N4rv.$4txAIlP0jnjJ29pasISQM7GC93LBGjbgyf37QKf5.jaWtdkAJqd90Qpw1xCzwJQAvvnBcAtvWzNjb4KTFVDoi/
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname bleaf02
+!
+spanning-tree mode mstp
+!
+vrf instance MGMT
+!
+management api http-commands
+   no shutdown
+!
+management api gnmi
+   transport grpc default
+      vrf MGMT
+!
+management api netconf
+   transport ssh default
+      vrf MGMT
+!
+interface Ethernet1
+!
+interface Ethernet2
+!
+interface Ethernet27
+!
+interface Ethernet28
+!
+interface Ethernet31
+!
+interface Ethernet32
+!
+interface Management0
+   vrf MGMT
+   ip address 172.100.100.7/24
+!
+no ip routing
+no ip routing vrf MGMT
+!
+ip route vrf MGMT 0.0.0.0/0 172.100.100.1
+!
+end

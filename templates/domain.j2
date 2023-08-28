@@ -1,0 +1,22 @@
+{###########################################
+
+Purpose:
+Generating Hostanme/Domain Configuration
+############################################}
+ip domain-list {{ domain.name }}
+!
+{% if domain.vrf %}
+ip domain lookup vrf {{ domain.vrf }} source-interface Management1
+{% else %}
+ip domain lookup source-interface Management1
+{% endif %}
+!
+{% for server in domain.server %}
+{% if domain.vrf %}
+ip name-server vrf {{ domain.vrf }} {{ server }} 
+{% else %}
+ip name-server {{ server }} 
+{% endif %}
+{% endfor %}
+!
+dns domain {{ domain.name }}

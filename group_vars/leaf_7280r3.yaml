@@ -1,0 +1,150 @@
+### port profile for specific SKU in leaf function
+### port profile of Spine defined in poc_spine.yaml 
+---
+esxi_port_range:
+   - 1/1/1-1/1/2
+front_panel_port_range:
+   - 1/1/1-1/1/48
+   - 1/1/49-1/1/56
+
+## Self YAML
+#type "1x40G/2x100G/2x50G/4x100G/4x25G/4x10G"
+breakout:
+   # -
+   #    type: "4x25G"
+   #    start: 1
+   #    end: 9
+
+trunk_port:
+   # desc: "trunk memeber port"
+   # vlan_list: "{{ vxlans | json_query('[?state==`present`].vlan') }}"
+   # range:
+   # # -
+   # #    desc: "25G Compute Port Group1"
+   # #    start: 5
+   # #    end: 6
+   # #    state: "present"
+   # # -
+   # #    desc: "25G Compute Port Group2"
+   # #    start: 7
+   # #    end: 8
+   # #    state: "present"
+   # # port-range in same trunk
+   # port_indiv:
+   # -  desc: "trunk port to compute"
+   #    id: "1"
+   #    state: "present"
+   # -  desc: "trunk port to compute"
+   #    id: "2"
+   #    state: "present"
+
+## define the port mapping on platform
+ports:
+   fabric:
+   - 31
+   - 32
+   mlag_ctl:
+   - 27
+   - 28
+   compute:
+   - 1
+   - 2
+
+vlt: 
+   domain_id: "1"
+   vlti: 
+    - "27"
+    - "28"
+
+#MLAG
+mlag_bond: 
+   domain_id: "1"
+   desc: "MLAG Control link Port-Channel"
+   vlan: 
+      desc: "MLAG_CTL_VLAN"
+      id: "4094"
+      netv4: "{{ mlag_ctl_netv4 }}"
+      netv6: "{{ mlag_ctl_netv6 }}"
+   group: "mlagpeer"
+   bond_id: "100"
+   bmem_range:
+   bmem_indiv:
+     - "27"
+     - "28"
+
+port_channel:
+   #  - bond_id: 101
+   #    mlag_id: 101
+   #    desc: "compute bond"
+   #    vlan_list: "{{ vxlans | json_query('[?state==`present`].vlan') }}"
+   #    bmem_range:
+   #    bmem_indiv:
+   #       - "1"
+   #  - bond_id: 102 
+   #    mlag_id: 102
+   #    desc: "compute bond"
+   #    vlan_list: "{{ vxlans | json_query('[?state==`present`].vlan') }}"
+   #    bmem_range:
+   #    bmem_indiv:
+   #       - "2"
+
+## Sflow per SKU
+sflow_port_sku:
+-
+   id: Eth1
+   sflow_enable : true
+   ingress_enable: true
+   state: present
+   # polling_interval: 30
+   sample_rate:
+-
+   id: Eth2
+   sflow_enable : true
+   ingress_enable: true
+   state: present
+   # polling_interval: 30
+   sample_rate:
+-
+   id: Eth3
+   sflow_enable : true
+   ingress_enable: true
+   state: present
+   # polling_interval: 30
+   sample_rate:
+-
+   id: Eth4
+   sflow_enable : true
+   ingress_enable: true
+   state: present
+   # polling_interval: 30
+   sample_rate:
+
+span_sku:
+  session:
+  -
+    name: "mon_session1"
+    desitnation: "erspan"
+    direction:  "both"           #Mirror session direction, rx|rx|both
+    source:     "eth1"           #Mirror session source interface
+    acl_grp: "span_acl1"
+    dscp:       "10"             #ERSPAN destination dscp
+    dst_ip:     "192.168.20.2"   #ERSPAN Destination ip address
+    gre:        "0x88ee"         #ERSPAN destination gre-type
+    queue:                       #ERSPAN destination queue
+    src_ip:     "10.0.2.1"       #ERSPAN source ip address
+    ttl:        "10"             #ERSPAN destination ttl
+    state:      "present"        #State, absent or present
+  -
+    name: "mon_session2"
+    desitnation: "cpu"
+    direction:  "both"            #Mirror session direction
+    source:     "eth2"            #Mirror session source interface
+    acl_grp: "span_acl2"
+    state:      "present"         #State, absent or present
+  -
+    name: "mon_session3"
+    desitnation: "eth16"
+    direction:  "both"           #Mirror session direction
+    source:     "eth15"      #Mirror session source interface
+    acl_grp: "span_acl3"
+    state:      "present"         #State, absent or present

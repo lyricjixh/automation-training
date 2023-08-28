@@ -1,0 +1,23 @@
+{###########################################
+
+Purpose:
+Generating Loopback Interface Configuration
+############################################}
+interface loopback{{ lpbk_ulay_id }}
+ description "{{ lpbk_ulay.desc }}"
+ ip address {{ lpbk_ulay.addr_v4 }}/32
+{% if lpbk_ulay.addr_v6 is defined and lpbk_ulay.addr_v6 %}
+ ipv6 address {{ lpbk_ulay.addr_v6 }}/128
+{% endif %}
+!
+{% if lpbk_olay is defined and lpbk_olay %}
+interface Loopback{{ lpbk_olay.id }}
+ description "{{ lpbk_olay.desc }}"
+{% if lpbk_olay.addr_v4 is defined and lpbk_olay.addr_v4 %}
+ ip address {{ lpbk_olay.addr_v4 }}/32
+{% endif %}
+{% if lpbk_olay.addr_v6 is defined and lpbk_olay.addr_v6 %}
+ ipv6 address {{ lpbk_olay.addr_v6 }}/128
+{% endif %}
+!
+{% endif %}

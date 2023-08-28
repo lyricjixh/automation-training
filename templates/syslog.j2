@@ -1,0 +1,31 @@
+{###########################################
+
+Purpose:
+Generating Syslog Configuration
+############################################}
+{% if log is defined and log %}
+{% if log.sync is defined and log.sync == 'yes' %}
+logging synchronous level {{ log.trap }}
+{% endif %}
+{% if log.console is defined and log.console == 'yes' %}
+logging console
+{% else %}
+no logging console
+{% endif %}
+{% if log.monitor is defined and log.monitor == 'yes' %}
+logging monitor
+{% else %}
+no logging monitor
+{% endif %}
+{% if log.vrf is defined and log.vrf %}
+{% for server in log.server %}
+logging vrf {{ log.vrf }} host {{ server.addr }} {{ server.port }} protocol {{ server.protocol }}
+{% endfor %}
+logging vrf {{ log.vrf }} source-interface {{ log.src_intf }}
+{% else %}
+{% for server in log.server %}
+logging host {{ server.addr }} {{ server.port }} protocol {{ server.protocol }}
+{% endfor %}
+{% endif %}
+!
+{% endif %}

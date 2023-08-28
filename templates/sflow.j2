@@ -1,0 +1,53 @@
+{###########################################
+
+Purpose:
+Generating Syslog Configuration
+############################################}
+{% if sflow is defined and sflow %}
+{% if sflow.sflow_enable == "false" %}
+no sflow enable
+{% elif sflow.sflow_enable == "true" %}
+sflow hardware acceleration
+{% if sflow.src_intf is defined and sflow.src_intf %}
+{% if sflow.vrf is defined and sflow.vrf %}
+sflow vrf {{ sflow.vrf }} source-interface {{ sflow.src_intf }}
+{% else %}
+sflow source-interface {{ sflow.src_intf }}
+{% endif %}
+{% endif %}
+!
+{% for collector in sflow.collector %}
+{% if collector.state == "absent" %}
+no sflow destination {{ collector.collector_ip }}
+{% elif collector.state == "present" %}
+{% if sflow.vrf is defined and sflow.vrf %}
+sflow vrf {{ sflow.vrf }} destination {{ collector.collector_ip }} {{ collector.udp_port }}
+{% else %}
+sflow destination {{ collector.collector_ip }} {{ collector.udp_port }}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if sflow.polling_interval is defined and sflow.polling_interval %}
+sflow polling-interval {{ sflow.polling_interval }}
+{% else %}
+no sflow polling-interval
+{% endif %}
+{% if sflow.sample_rate is defined and sflow.sample_rate %}
+sflow sample {{ sflow.sample_rate }}
+{% endif %}
+{% if sflow.bgp is defined and sflow.bgp|lower == "enabled" %}
+sflow extension bgp
+{% endif %}
+!
+sflow run
+{% endif %}
+{% for port in sflow.port %}
+interface {{ port.id }}
+{% if port.state == "absent" %}
+ no sflow enable
+{% elif port.state == "present" %}
+ sflow enable
+{% endif %}
+!
+{% endfor %}
+{% endif %}

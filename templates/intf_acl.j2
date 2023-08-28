@@ -1,0 +1,61 @@
+{###########################################
+
+Purpose:
+Generating ACL under Interface Configuration
+############################################}
+{% for acl in ceos_acl %}
+{% if acl.ingress %}
+{% for intf in acl.ingress %}
+interface {{ intf.name }}
+{% if acl.type|lower == "ipv4" %}
+{% if intf.state|lower == "present" %}
+ ip access-group {{ acl.name }} in
+{% elif intf.state|lower == "absent" %}
+ no ip access-group {{ acl.name }} in
+{% endif %}
+{% endif %}
+{% if acl.type|lower == "ipv6" %}
+{% if intf.state|lower == "present" %}
+ ipv6 access-group {{ acl.name }} in
+{% elif intf.state|lower == "absent" %}
+ no ipv6 access-group {{ acl.name }} in
+{% endif %}
+{% endif %}
+{% if acl.type|lower == "mac" %}
+{% if intf.state|lower == "present" %}
+ mac access-group {{ acl.name }} in
+{% elif intf.state|lower == "absent" %}
+ no mac access-group {{ acl.name }} in
+{% endif %}
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% if acl.egress %}
+{% for intf in acl.egress %}
+interface {{ intf.name }}
+{% if acl.type|lower == "ipv4" %}
+{% if intf.state|lower == "present" %}
+ ip access-group {{ acl.name }} out
+{% elif intf.state|lower == "absent" %}
+ no ip access-group {{ acl.name }} out
+{% endif %}
+{% endif %}
+{% if acl.type|lower == "ipv6" %}
+{% if intf.state|lower == "present" %}
+ ipv6 access-group {{ acl.name }} out
+{% elif intf.state|lower == "absent" %}
+ no ipv6 access-group {{ acl.name }} out
+{% endif %}
+{% endif %}
+{% if acl.type|lower == "mac" %}
+{% if intf.state|lower == "present" %}
+ mac access-group {{ acl.name }} out
+{% elif intf.state|lower == "absent" %}
+ no mac access-group {{ acl.name }} out
+{% endif %}
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,10 @@
+name_orig: "smd505"
+
+
+urpf_port:
+  - "Port-Channel5"
+  - "Port-Channel50.60"
+  # - "Eth7/1"
+  # - "Eth8/1"
+  # - "Eth9/1"
+  # - "Eth10/1"

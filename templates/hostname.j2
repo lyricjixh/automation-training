@@ -1,0 +1,11 @@
+{###########################################
+
+Purpose:
+Generating Hostanme/Domain Configuration
+############################################}
+{% if domain is defined and domain %}
+hostname {{ hostname }}.{{ domain.name }}
+{% else %}
+hostname {{ hostname }}
+{% endif %}
+!

@@ -1,0 +1,32 @@
+---
+ansible_ssh_user: lab
+ansible_ssh_pass: "{{vault_lab_password}}"
+ansible_sudo_pass: "{{vault_lab_password}}"
+
+ansible_python_interpreter: /usr/bin/python3
+
+ubuntu_packages:
+  - lldpd
+  - iperf
+  - dkms
+  - build-essential
+  - python3-pip
+  - net-tools
+  - netplan.io
+#   - network-manager
+
+ubuntu_users:
+  - name: "ansible"
+    groups: "devops"
+    password: "{{ vault_ansible_password }}"
+    state: "present"
+  - name: "xji"
+    groups: "devops"
+    password: "{{ vault_xji_password }}"
+    state: "present"
+
+ports:
+   "lo":
+      desc: "Loopback"
+      addr_v4: "{{ compute_lpbk0_netv4 | ansible.utils.ipaddr(seq-100) | ansible.utils.ipaddr('address') }}/32"
+      addr_v6: "{{ compute_lpbk0_netv6 | ansible.utils.ipaddr('%0x' % seq-100) | ansible.utils.ipaddr('address') }}/128"

@@ -1,0 +1,47 @@
+{#######################################################
+
+Purpose:
+Generating Uplink Failure Detection (UFD) Configuration
+including L3 PTP link between Leaf/spine
+########################################################}
+link state track {{ ufd.grp_name }}
+ description {{ ufd.desc }}
+ timeout {{ ufd.timeout }}
+ threshold type percentage
+ threshold down {{ ufd.threshold_down }}
+ threshold up {{ ufd.threshold_up }}
+!
+{% for intf in fabric_links %}
+interface Eth 1/{{ intf.name }}
+ link state track {{ ufd.grp_name }} upstream
+!
+{% endfor %}
+{#
+{% if trunk_port.range is defined and trunk_port.range %}
+{% for trange in trunk_port.range %}
+interface range Eth 1/{{trange.start}}-1/{{trange.end}}
+{% if trange.state == "present" %}
+ link state track {{ ufd.grp_name }} downstream
+{% elif trange.state == "absent" %}
+ no link state track {{ ufd.grp_name }} downstream
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+#}
+{% if trunk_port.port_indiv is defined and trunk_port.port_indiv %}
+{% for tport in trunk_port.port_indiv %}
+interface Eth 1/{{tport.id}}
+{% if tport.state == "present" %}
+ link state track {{ ufd.grp_name }} downstream
+{% elif tport.state == "absent" %}
+ no link state track {{ ufd.grp_name }} downstream
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+{% if mlag_bond is defined and mlag_bond %}
+interface PortChannel {{ mlag_bond.bond_id }}
+ link state track {{ ufd.grp_name }} downstream
+!
+{% endif %}

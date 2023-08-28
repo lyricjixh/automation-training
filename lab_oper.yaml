@@ -1,0 +1,311 @@
+---
+- hosts: dc2
+  gather_facts: "false"
+  vars:
+    temp_file: "hostanme.j2"
+    ansible_command_timeout: 300
+  collections:
+  - arista.eos
+
+  tasks:
+  - name: Display UUT information
+    debug:
+      msg:
+        - "The network model: {{ ansible_net_model }}"
+        - "EOS Image version: {{ ansible_net_version }}"
+        - "Memory: {{ ansible_net_version }}"
+    tags:
+      - generic
+
+  - name: Confirm Multi-Agent
+    eos_command:
+      commands:
+        - show running-config | in multi-agent
+      wait_for:
+        - result[0] contains multi-agent
+    register: show_output
+    tags:
+      - magent
+
+  - name: Create a show log directory if it does not exist
+    ansible.builtin.file:
+      path: "{{ log_dir }}"
+      state: directory
+      mode: '0755'
+    tags:
+     - logdir
+
+  - name: Backup cfg
+    arista.eos.eos_config:
+      backup: yes
+      backup_options:
+        filename: "cfg_archive.{{hostname}}"
+        dir_path: "{{ log_dir }}"
+    tags:
+      - archive
+    
+  - name: Collect Show Logs
+    block:
+    # - name: Collect Vxlan Logs_Itemized
+    #   eos_command:
+    #     commands: "{{item}}"
+    #   loop:
+    #     - show interface vxlan1
+    #     - show bgp summary
+    #     - show bgp evpn summary
+    #     - show bgp evpn route-type imet detail
+    #     - show bgp evpn route-type mac-ip detail
+    #     - show bgp evpn route-type ip-prefix ipv4 detail
+    #     - show hardware capacity
+    #   register: show_output
+
+    # - name: Display the itemized Logs
+    #   debug:
+    #     msg:
+    #       - "### The vxlan interface ###"
+    #       - "{{ show_output.results[0].stdout_lines }}"
+    #       - "### bgp summary ###"
+    #       - "{{ show_output.results[1].stdout_lines }}"
+    #       - "### bgp evpn summary ###"
+    #       - "{{ show_output.results[2].stdout_lines }}"
+    #       - "### evpn remote vtep type-3 ###"
+    #       - "{{ show_output.results[3].stdout_lines }}"
+    #       - "### evpn mac/ip type-2 ###"
+    #       - "{{ show_output.results[4].stdout_lines }}"
+    #       - "### evpn IP prefix type-5 ###"
+    #       - "{{ show_output.results[5].stdout_lines }}"
+
+    - name: Show holistic Logs
+      eos_command:
+        commands:
+          - show version
+          # - show hardware capacity | no-more
+          # - show process top once | no-more
+          # - show process top memory once | no-more
+          # - show platform sand l3 summary
+          - show bgp summary | no-more
+          # - show bgp evpn summary | no-more
+          # - show bgp evpn route-type imet detail | no-more
+          # - show bgp evpn route-type mac-ip detail | no-more
+          # - show bgp evpn route-type ip-prefix ipv4 detail | no-more
+          # - show ip route vrf all summary | no-more
+          - show vrf
+          # # - show ip ospf nei vrf all
+          # # - show ipv6 ospf nei vrf all
+          # - show port-channel dense
+          # - show log | no-more
+      register: show_output
+
+    - name: save output to local directory
+      copy:
+        content: "{{ show_output.stdout | replace('\\n', '\n') }}"
+        dest: "{{ log_dir }}/showlog.{{ inventory_hostname }}"
+    tags:
+      - showlog
+
+  - name: Generate the intial configuration
+    template:
+        src: initial_cfg.j2
+        dest: "files/{{hostname}}.conf.init"
+    tags:
+    - cfg_init
+
+  - name: Change Config with Template
+    eos_config:
+        src: "{{ temp_file }}"
+    tags:
+    - cfg_temp
+
+  - name: CFG Changes
+    arista.eos.eos_config:
+      lines:
+        - "no neighbor FABRIC-PEER_EVPN activate"
+      parents: "address-family ipv4"
+      before: "router bgp 12189"
+      replace: line
+    # loop:
+    #   - "50"
+    #   - "50.20"
+    #   - "50.60"
+    #   - "50.61"
+    tags:
+      - FABRIC
+
+  - name: Flip the port
+    eos_interfaces:
+      config:
+        - name: "Ethernet{{ item }}"
+          enabled: true
+    loop:
+      - 49/1
+    tags:
+      - port
+
+  - name : "Change partition"
+    eos_config:
+      lines:
+        - "platform trident routing-table partition 4"
+        - "platform trident forwarding-table partition 4"
+    tags:
+      - partition
+
+  - name : "Disable Egress RACL Sharing"
+    block:
+    - name : "Disalbe Egress RACL Sharing"
+      eos_config:
+        lines:
+          - "no hardware access-list resource sharing vlan ipv4 out"
+
+    - name : "Enable uRPF"
+      eos_config:
+        lines:
+          - "ip verify unicast source reachable-via rx allow-default"
+          - "ipv6 verify unicast source reachable-via rx"
+        parents: "interface {{ item }}"
+      loop: "{{ urpf_port }}"
+
+    - name: Collect uRPF Logs
+      eos_command:
+        commands:
+          - show ip route rpf unicast vrf FABRIC-CORE
+          - show ipv6 route rpf unicast vrf FABRIC-CORE
+          - show platform fap label sharing inlif shadow | no-more
+          - show hardware counter drop
+      register: show_output
+      tags:
+        - urpf
+
+    - name: Show uRPF Logs
+      debug:
+        msg: "{{ show_output.stdout | replace('\\n', '\n') }}"
+      tags:
+        - urpf
+    tags:
+      - spinetune
+
+  - name : "OSPF"
+    eos_config:
+      lines:
+        - "passive-interface port-Channel 3"
+      parents: ['router ospf 1 vrf FABRIC-EDGE']
+      match: exact
+    tags:
+      - ospf
+
+  - name : "OSPFv3"
+    eos_config:
+      lines:
+        - "passive-interface port-Channel 3"
+      parents: ['ipv6 router ospf 1 vrf FABRIC-EDGE']
+      match: exact
+    tags:
+      - ospfv3
+
+  - name : "Delete BGP network"
+    eos_config:
+      lines:
+        - "no network 131.153.60.0/22"
+      parents: ['address-family ipv4']
+      before: ['router bgp 12189', 'vrf FABRIC-EDGE']
+      match: exact
+      # prompt: "[confirm]"
+      # answer: "yes"
+    # notify:
+    # - display BGP info
+    tags:
+      - bgpnet
+
+  - name : "Enable BGP network"
+    eos_config:
+      lines:
+        - "network 131.153.60.0/22"
+      parents: ['address-family ipv4']
+      before: ['router bgp 12189', 'vrf FABRIC-CORE']
+      match: exact
+      # prompt: "[confirm]"
+      # answer: "yes"
+    tags:
+      - bgpnet
+
+  - name : "Bringup the BGPv4 Peer"
+    eos_config:
+      lines:
+        - "neighbor tester_v4 maximum-routes 0"
+        - "neighbor tester_v6 maximum-routes 0"
+      parents: ['router bgp {{ bgp.local_as }}']
+      match: exact
+    notify:
+      - display BGP info
+    tags:
+      - bgpup
+
+  - name: Wait 15 secs for BGP Peers coming up
+    pause:
+      seconds: 15
+    delegate_to: localhost
+    when: peerstate == "up"
+
+  - name: Collecting EOS Show Tech  
+    block:
+    - name: Collect show tech onto the local disk
+      vars:
+        ansible_command_timeout: 180
+      eos_command:
+        commands: "show tech-support all > file:home/{{ansible_ssh_user}}/show_tech_{{ inventory_hostname }}"
+
+    - name: Fetch show tech file from switch to local host 
+      ansible.builtin.expect:
+          command: "scp {{ansible_ssh_user}}@{{ ansible_host }}:/home/{{ansible_ssh_user}}/show_tech_{{ inventory_hostname }} {{ log_dir }}"
+          responses:
+              '\?': "yes"
+              'Password\:': "{{vault_lab_password}}"
+      delegate_to: localhost
+      tags:
+      - fetch
+    tags:
+    - showtech
+
+  - name: Delete Layer2 Port
+    eos_l2_interfaces:
+        config:
+        - name: Ethernet1
+        - name: Ethernet2
+        state: deleted
+    tags:
+      - del-layer2
+
+  - name: Apply dummy loopback
+    vars:
+      ansible_command_timeout: 600
+    eos_config:
+        src: dummy_lpbk.j2
+    tags:
+    - dummy_lpbk
+
+  - name: Apply dummy vlans
+    vars:
+      ansible_command_timeout: 600
+    eos_config:
+        src: dummy_vlans.j2
+    tags:
+    - dummy_vlan
+
+  - name: Apply ACL Rules
+    block: 
+      - name: Push ACL Rules
+        eos_config:
+            src: "{{ acl_gen }}"
+        tags:
+        - aclgen
+
+      - name: Apply ACL Rules
+        eos_config:
+            src: "acl.j2"
+    tags:
+    - acl
+
+  - name: Apply Faults in Cleaf01
+    eos_config:
+        src: fault_inject_cleaf01
+    tags:
+    - faulty
