@@ -339,6 +339,21 @@
       tags:
         - clab
 
+    - name: Checking Virtual Topology Version
+      command: ansible -m eos_command -a "commands='show version'" ceos -v
+      args:
+        chdir: "./training"
+      become: no
+      register: showlog
+      tags:
+        - ceos
+
+    - name: Display Showlog Stdout
+      debug: 
+        var: showlog.stdout
+      tags:
+        - ceos
+
   handlers:
     - name: system start lldpd
       systemd:
