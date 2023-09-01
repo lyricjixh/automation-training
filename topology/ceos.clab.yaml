@@ -1,123 +1,44 @@
-name: arista
+name: ceos-lab
 
 mgmt:
-  network: clab-oob
-  ipv4_subnet: 172.100.100.0/24
+  network: ceos-oob
+  ipv4-subnet: 172.100.100.0/24
   
 topology:
   kinds:
     ceos:
-      image: ceos:4.28.4M
+      image: ceos:4.30.2F
       env:
         CLAB_MGMT_VRF: MGMT
   nodes:
     cleaf01:
       kind: ceos
-      mgmt_ipv4: 172.100.100.2
-      # startup-config: ztp/cleaf01.conf.init
+      mgmt-ipv4: 172.100.100.2
     cleaf02: 
       kind: ceos
-      mgmt_ipv4: 172.100.100.3
-      # startup-config: ztp/cleaf02.conf.init
-      env:
-        BOOT_DEALY: 10
+      mgmt-ipv4: 172.100.100.3
+      # env:
+      #   BOOT_DEALY: 10
     cleaf03:
       kind: ceos
-      mgmt_ipv4: 172.100.100.4
-      # startup-config: ztp/cleaf03.conf.init
-      env:
-        BOOT_DEALY: 20
+      mgmt-ipv4: 172.100.100.4
+      # env:
+      #   BOOT_DEALY: 20
     cleaf04: 
       kind: ceos
-      mgmt_ipv4: 172.100.100.5
-      # startup-config: ztp/cleaf04.conf.init
-      env:
-        BOOT_DEALY: 30
-    bleaf01: 
-      kind: ceos
-      mgmt_ipv4: 172.100.100.6
-      # startup-config: ztp/bleaf01.conf.init
-      env:
-        BOOT_DEALY: 40
-    bleaf02: 
-      kind: ceos
-      mgmt_ipv4: 172.100.100.7
-      # startup-config: ztp/bleaf02.conf.init
-      env:
-        BOOT_DEALY: 50
-    cleaf05:
-      kind: ceos
-      mgmt_ipv4: 172.100.100.8
-      # startup-config: ztp/cleaf03.conf.init
-      env:
-        BOOT_DEALY: 20
-    cleaf06: 
-      kind: ceos
-      mgmt_ipv4: 172.100.100.9
-      # startup-config: ztp/cleaf04.conf.init
-      env:
-        BOOT_DEALY: 30
+      mgmt-ipv4: 172.100.100.5
+      # env:
+      #   BOOT_DEALY: 30
     spine01:
       kind: ceos
-      mgmt_ipv4: 172.100.100.101
-      # startup-config: ztp/spine01.conf.init
-      env:
-        BOOT_DEALY: 60
+      mgmt-ipv4: 172.100.100.101
+      # env:
+      #   BOOT_DEALY: 40
     spine02:
       kind: ceos
-      mgmt_ipv4: 172.100.100.102
-      # startup-config: ztp/spine02.conf.init
-      env:
-        BOOT_DEALY: 70
-    dc-gw01:
-      kind: linux
-      mgmt_ipv4: 172.100.100.251
-      image: frrouting/frr:latest
-      binds:
-        - files/frr_daemons:/etc/frr/daemons
-        - files/frr.conf.dc-gw01:/etc/frr/frr.conf
-    dc-gw02:
-      kind: linux
-      image: frrouting/frr:latest
-      mgmt_ipv4: 172.100.100.252
-      binds:
-        - files/frr_daemons:/etc/frr/daemons
-        - files/frr.conf.dc-gw02:/etc/frr/frr.conf
-    r1-vm01:
-      kind: linux
-      image: ubuntu_clab:latest
-      mgmt_ipv4: 172.100.100.191
-      wait-for:
-        - cleaf01
-        - cleaf02
-    r1-vm02:
-      kind: linux
-      image: ubuntu_clab:latest
-      mgmt_ipv4: 172.100.100.192
-      wait-for:
-        - cleaf01
-        - cleaf02
-    r2-vm03:
-      kind: linux
-      image: ubuntu_clab:latest
-      mgmt_ipv4: 172.100.100.193
-      wait-for:
-        - cleaf03
-        - cleaf04
-    r2-vm04:
-      kind: linux
-      image: ubuntu_clab:latest
-      mgmt_ipv4: 172.100.100.194
-      wait-for:
-        - cleaf03
-        - cleaf04
-    r4-vm05:
-      kind: linux
-      image: ubuntu_clab:latest
-      mgmt_ipv4: 172.100.100.195
-      wait-for:
-        - cleaf05
-        - cleaf06
+      mgmt-ipv4: 172.100.100.102
+      # env:
+      #   BOOT_DEALY: 50
 
   links:
     # POD leaf pair in rack interlink
@@ -125,10 +46,6 @@ topology:
     - endpoints: ["cleaf01:eth28", "cleaf02:eth28"]
     - endpoints: ["cleaf03:eth27", "cleaf04:eth27"]
     - endpoints: ["cleaf03:eth28", "cleaf04:eth28"]
-    - endpoints: ["bleaf01:eth27", "bleaf02:eth27"]
-    - endpoints: ["bleaf01:eth28", "bleaf02:eth28"]
-    - endpoints: ["cleaf05:eth27", "cleaf06:eth27"]
-    - endpoints: ["cleaf05:eth28", "cleaf06:eth28"]
 
     # POD leaf to spine links
     - endpoints: ["cleaf01:eth31", "spine01:eth1"]
@@ -139,31 +56,3 @@ topology:
     - endpoints: ["cleaf03:eth32", "spine02:eth3"]
     - endpoints: ["cleaf04:eth31", "spine01:eth4"]
     - endpoints: ["cleaf04:eth32", "spine02:eth4"]
-    - endpoints: ["bleaf01:eth31", "spine01:eth5"]
-    - endpoints: ["bleaf01:eth32", "spine02:eth5"]
-    - endpoints: ["bleaf02:eth31", "spine01:eth6"]
-    - endpoints: ["bleaf02:eth32", "spine02:eth6"]
-
-    # POD leaf pair to computes links
-    - endpoints: ["cleaf01:eth1", "r1-vm01:eth1"]
-    - endpoints: ["cleaf01:eth2", "r1-vm02:eth1"]
-    - endpoints: ["cleaf02:eth1", "r1-vm01:eth2"]
-    - endpoints: ["cleaf02:eth2", "r1-vm02:eth2"]
-    - endpoints: ["cleaf03:eth1", "r2-vm03:eth1"]
-    - endpoints: ["cleaf03:eth2", "r2-vm04:eth1"]
-    - endpoints: ["cleaf04:eth1", "r2-vm03:eth2"]
-    - endpoints: ["cleaf04:eth2", "r2-vm04:eth2"]
-    - endpoints: ["cleaf05:eth1", "r4-vm05:eth1"]
-    - endpoints: ["cleaf06:eth1", "r4-vm05:eth2"]
-
-    # POD bleaf pair to dc gateway links
-    - endpoints: ["bleaf01:eth1", "dc-gw01:eth1"]
-    - endpoints: ["bleaf01:eth2", "dc-gw02:eth1"]
-    - endpoints: ["bleaf02:eth1", "dc-gw01:eth2"]
-    - endpoints: ["bleaf02:eth2", "dc-gw02:eth2"]
-
-    # POD bleaf pair to Rack04 links
-    - endpoints: ["bleaf01:eth3", "cleaf05:eth3"]
-    - endpoints: ["bleaf01:eth4", "cleaf06:eth3"]
-    - endpoints: ["bleaf02:eth3", "cleaf05:eth4"]
-    - endpoints: ["bleaf02:eth4", "cleaf06:eth4"]

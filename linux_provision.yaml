@@ -185,7 +185,7 @@
       debug: 
         var: showlog.stdout
 
-  - name: Install Git
+  - name: Install Git and Check Git Repo
     tags:
       - git
     block:
@@ -224,6 +224,15 @@
       debug: 
         var: showlog.stdout
 
+    - name: Virutal Lab Git checkout
+      ansible.builtin.git:
+        repo: '{{clab_git_repo}}'
+        dest: './training'
+        update: yes
+      become: False
+      tags:
+        - gitrepo
+
   - name: Install Containerlab
     tags:
       - containerlab
@@ -256,28 +265,16 @@
     block:
     - name: Upload cEOS Image
       copy:
-        src: "../{{image_dir}}/cEOS-lab-{{eos_version}}.tar"
+        src: "../{{image_dir}}/cEOS-lab-{{eos_ver}}.tar"
         dest: "{{image_dir}}/"
         owner: lab
         group: lab
         mode: 0644
       tags:
         - copyimage
-
+        
     - name: Load cEOS image(s)
-      command: "docker import {{image_dir}}/cEOS-lab-{{eos_version}}.tar ceos:{{eos_version}}"
-      tags:
-        - loadimage
-
-    - name: Check Docker cEOS image(s)
-      command: "docker image ls"
-      register: showlog
-      tags:
-        - loadimage
-
-    - name: Display Showlog Stdout
-      debug: 
-        var: showlog.stdout
+      command: "docker import {{image_dir}}/cEOS-lab-{{eos_ver}}.tar ceos:{{eos_ver}}"
       tags:
         - loadimage
 
@@ -297,13 +294,41 @@
     #   tags:
     #     - loadimage
 
-    - name: check containerlab version
-      command: "containerlab version"
+    - name: Check Docker cEOS image(s)
+      command: "docker image ls"
       register: showlog
+      tags:
+        - loadimage
 
     - name: Display Showlog Stdout
       debug: 
         var: showlog.stdout
+      tags:
+        - loadimage
+
+    - name: Provision Virtual CLAB Topology
+      command: "CLAB_LABDIR_BASE=~ containerlab deploy -t {{ clab_topo }} --reconfigure"
+      tags:
+        - clab
+
+    - name: Waiting for Virtual Topolgy Ready
+      wait_for:
+        timeout: 20
+      delegate_to: localhost
+      tags:
+        - clab
+
+    - name: Inspect Virtual Topolgy
+      command: "sudo containerlab inspect -t {{ clab_topo }}"
+      register: showlog
+      tags:
+        - clab
+
+    - name: Display Showlog Stdout
+      debug: 
+        var: showlog.stdout
+      tags:
+        - clab
 
   handlers:
     - name: system start lldpd
