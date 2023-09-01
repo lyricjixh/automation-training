@@ -101,8 +101,18 @@
 
     - name: Upgrade pip3
       pip:
-        name: pip3
+        name: pip
         extra_args: --upgrade
+      tags:
+        - pip
+
+    - name: PIP Install packages
+      pip:
+        name: "{{ item }}"
+        state: present
+      loop: "{{pip_packages}}"
+      tags:
+        - pip
 
   - name: Install Docker Engine
     tags:
@@ -127,6 +137,12 @@
     - name: Install Docker Module for Python
       pip:
         name: docker
+
+    - name: Install docker collection
+      community.general.ansible_galaxy_install:
+        type: collection
+        name: community.docker
+      tags: inst_collection
 
     # - name: Pull default Docker image
     #   community.docker.docker_image:
@@ -212,18 +228,6 @@
     tags:
       - containerlab
     block:
-    # - name: Add Netdevops Repository
-    #   apt_repository:
-    #     repo: deb [trusted=yes] https://repo.fury.io/netdevops/
-    #     state: present
-    #     filename: netdevops
-
-    # - name: Update apt and install containerlab
-    #   apt:
-    #     name: containerlab
-    #     state: latest
-    #     update_cache: true
-
     - name: Download Containerlab Inst Script
       get_url:
         url: https://get.containerlab.dev
@@ -237,6 +241,61 @@
       file:
         path: /tmp/clab_inst.sh
         state: absent
+
+    - name: check containerlab version
+      command: "containerlab version"
+      register: showlog
+
+    - name: Display Showlog Stdout
+      debug: 
+        var: showlog.stdout
+
+  - name: Staging Virtual Lab with Containerlab
+    tags:
+      - containerlab
+    block:
+    - name: Upload cEOS Image
+      copy:
+        src: "../{{image_dir}}/cEOS-lab-{{eos_version}}.tar"
+        dest: "{{image_dir}}/"
+        owner: lab
+        group: lab
+        mode: 0644
+      tags:
+        - copyimage
+
+    - name: Load cEOS image(s)
+      command: "docker import {{image_dir}}/cEOS-lab-{{eos_version}}.tar ceos:{{eos_version}}"
+      tags:
+        - loadimage
+
+    - name: Check Docker cEOS image(s)
+      command: "docker image ls"
+      register: showlog
+      tags:
+        - loadimage
+
+    - name: Display Showlog Stdout
+      debug: 
+        var: showlog.stdout
+      tags:
+        - loadimage
+
+    # - name: Load cEOS image(s)
+    #   docker_image:
+    #     name: "ceos"
+    #     load_path: "/home/lab/images/cEOS-lab-4.30.2F.tar"
+    #     state: present
+    #     source: load
+    #   register: result
+    #   tags:
+    #     - loadimage
+
+    # - name: Print the loaded image names
+    #     debug:
+    #     msg: "Loaded the following images: {{ result.ceos:4.30.2F | join(', ') }}"
+    #   tags:
+    #     - loadimage
 
     - name: check containerlab version
       command: "containerlab version"

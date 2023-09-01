@@ -21,6 +21,11 @@ ubuntu_packages:
   # - network-manager
   # - iperf
 
+pip_packages:
+  - docker
+  - docker-compose
+  - requests
+  - urllib3
 # lsb_release -cs
 ubuntu_release: jammy
 
@@ -40,4 +45,10 @@ git_cfg:
   name: "xianghui.ji@arista.com"
   scope: global
 
+## [3.8, 3.9, 3.10, 3.11, 3.12]
 python3_version: "3.10"
+
+## cEOS
+image_dir: "images"
+## [4.28.8.1M, 4.29.4M, 4.30.2F]
+eos_version: "4.30.2F"
