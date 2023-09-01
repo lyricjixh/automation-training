@@ -26,6 +26,8 @@ pip_packages:
   - docker-compose
   - requests
   - urllib3
+  - ansible-pylibssh
+
 # lsb_release -cs
 ubuntu_release: jammy
 

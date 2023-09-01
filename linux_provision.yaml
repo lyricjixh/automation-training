@@ -51,6 +51,16 @@
         state: "{{ item.state }}"
       with_items: "{{ ubuntu_users }}"
 
+    - name: Upload the Vault Key
+      copy:
+        src: "~/.vault_pass"
+        dest: ".vault_pass"
+        owner: lab
+        group: lab
+        mode: 0644
+      tags:
+        - vault
+
   - name: Add the Dependency Packages
     tags:
       - package
@@ -307,16 +317,15 @@
         - loadimage
 
     - name: Provision Virtual CLAB Topology
-      command: "CLAB_LABDIR_BASE=~ containerlab deploy -t {{ clab_topo }} --reconfigure"
+      command: "containerlab deploy -t {{ clab_topo }} --reconfigure"
       tags:
         - clab
 
-    - name: Waiting for Virtual Topolgy Ready
+    - name: Waiting 15 sec for Virtual Topolgy Ready
       wait_for:
-        timeout: 20
-      delegate_to: localhost
+        timeout: 15
       tags:
-        - clab
+        - wait
 
     - name: Inspect Virtual Topolgy
       command: "sudo containerlab inspect -t {{ clab_topo }}"
