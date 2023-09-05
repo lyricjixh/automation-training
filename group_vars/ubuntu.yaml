@@ -28,6 +28,13 @@ pip_packages:
   - urllib3
   - ansible-pylibssh
 
+ansible_collections:
+  - ansible.netcommon
+  - ansible.utils
+  - arista.avd 
+  - arista.cvp
+  - arista.eos
+
 # lsb_release -cs
 ubuntu_release: jammy
 
@@ -47,6 +54,7 @@ git_cfg:
   name: "xianghui.ji@arista.com"
   scope: global
 
+git_clone_dir: "training"
 ## [3.8, 3.9, 3.10, 3.11, 3.12]
 python3_version: "3.10"
 

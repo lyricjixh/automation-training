@@ -195,6 +195,12 @@
       debug: 
         var: showlog.stdout
 
+    - name: Install The needed Ansible Collections
+      community.general.ansible_galaxy_install:
+        type: collection
+        name: "{{ item }}"
+      loop: "{{ ansible_collections }}"
+
   - name: Install Git and Check Git Repo
     tags:
       - git
@@ -237,7 +243,7 @@
     - name: Virutal Lab Git checkout
       ansible.builtin.git:
         repo: '{{clab_git_repo}}'
-        dest: './training'
+        dest: './{{ git_clone_dir }}'
         update: yes
       become: False
       tags:
@@ -342,7 +348,7 @@
     - name: Checking Virtual Topology Version
       command: ansible -m eos_command -a "commands='show version'" ceos -v
       args:
-        chdir: "./training"
+        chdir: "./{{ git_clone_dir }}"
       become: no
       register: showlog
       tags:
