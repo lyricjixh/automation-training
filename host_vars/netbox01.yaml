@@ -67,4 +67,4 @@ netbox_config:
 
 redis_bind: 127.0.0.1
 redis_version: 6.0.9
-redis_checksum: sha256:dc2bdcf81c620e9f09cfd12e85d3bc631c897b2db7a55218fd8a65eaa37f86dd
+redis_checksum: sha256:labbdcf81c620e9f09cfd12e85d3bc631c897b2db7a55218fd8a65eaa37f86dd

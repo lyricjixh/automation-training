@@ -327,16 +327,16 @@ bgp:
       desc: "EVPN PEER"
       remote_as: "{{ rack02_asn }}"
       peer_group: "FABRIC-PEER_EVPN"
-    - 
-      addr: "{{ hostvars['bleaf01'].lpbk_ulay.addr_v4 }}"
-      desc: "EVPN PEER"
-      remote_as: "{{ rack03_asn }}"
-      peer_group: "FABRIC-PEER_EVPN"
-    - 
-      addr: "{{ hostvars['bleaf02'].lpbk_ulay.addr_v4 }}"
-      desc: "EVPN PEER"
-      remote_as: "{{ rack03_asn }}"
-      peer_group: "FABRIC-PEER_EVPN"
+    # - 
+    #   addr: "{{ hostvars['bleaf01'].lpbk_ulay.addr_v4 }}"
+    #   desc: "EVPN PEER"
+    #   remote_as: "{{ rack03_asn }}"
+    #   peer_group: "FABRIC-PEER_EVPN"
+    # - 
+    #   addr: "{{ hostvars['bleaf02'].lpbk_ulay.addr_v4 }}"
+    #   desc: "EVPN PEER"
+    #   remote_as: "{{ rack03_asn }}"
+    #   peer_group: "FABRIC-PEER_EVPN"
   afi: 
     ipv4:
     -

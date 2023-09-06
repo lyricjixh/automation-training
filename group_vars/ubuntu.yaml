@@ -64,3 +64,9 @@ image_dir: "images"
 eos_ver: "4.30.2F"
 clab_topo: "~{{ansible_ssh_user}}/training/topology/ceos.clab.yaml"
 clab_git_repo: "https://gitlab.aristanetworks.com/cicd-group/training_ansible.git"
+
+## Ansible
+ansible_core_ver: "2.15.4rc1"
+ansible_log_dir: "./LOGS"
+## AVD
+avd_dir: avd_repo

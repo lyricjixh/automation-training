@@ -183,9 +183,9 @@
         state: latest
         update_cache: true
 
-    - name: Install Ansible-Core with 2.13.10 (AVD requirement)
+    - name: Update Ansible-Core (AVD requirement)
       pip:
-        name: ansible-core==2.13.10
+        name: ansible-core=={{ansible_core_ver}}
 
     - name: Check Ansible Version
       command: "ansible --version"
@@ -288,25 +288,25 @@
         mode: 0644
       tags:
         - copyimage
-        
-    - name: Load cEOS image(s)
-      command: "docker import {{image_dir}}/cEOS-lab-{{eos_ver}}.tar ceos:{{eos_ver}}"
+
+    - name: Import cEOS image(s)
+      docker_image:
+        name: "ceos:{{eos_ver}}"
+        load_path: "{{image_dir}}/cEOS-lab-{{eos_ver}}.tar"
+        state: present
+        source: load
       tags:
         - loadimage
 
-    # - name: Load cEOS image(s)
-    #   docker_image:
-    #     name: "ceos"
-    #     load_path: "/home/lab/images/cEOS-lab-4.30.2F.tar"
-    #     state: present
-    #     source: load
+    # - name: Check if cEOS image(s) imported
+    #   command: "docker image inspect ceos:{{eos_ver}}"
     #   register: result
     #   tags:
     #     - loadimage
 
-    # - name: Print the loaded image names
-    #     debug:
-    #     msg: "Loaded the following images: {{ result.ceos:4.30.2F | join(', ') }}"
+    # - name: Import cEOS image(s)
+    #   command: "docker import {{image_dir}}/cEOS-lab-{{eos_ver}}.tar ceos:{{eos_ver}}"
+    #   when: result.stdout == ""
     #   tags:
     #     - loadimage
 
@@ -345,7 +345,16 @@
       tags:
         - clab
 
-    - name: Checking Virtual Topology Version
+    - name: Creates Ansible Log directory
+      file:
+        path: "{{ansible_log_dir}}"
+        state: directory
+        owner: lab
+        group: lab
+        recurse: yes
+        mode: '0755'
+
+    - name: Checking Virtual Topology EoS Version
       command: ansible -m eos_command -a "commands='show version'" ceos -v
       args:
         chdir: "./{{ git_clone_dir }}"
@@ -354,11 +363,48 @@
       tags:
         - ceos
 
-    - name: Display Showlog Stdout
+    - name: Show Virtual Topology EoS Version
       debug: 
         var: showlog.stdout
       tags:
         - ceos
+
+  - name: Staging Arista Validate Design
+    tags:
+      - avd
+    # vars:
+    #   node_app_dir: /var/local/my_node_app
+
+    # environment:
+    #   ARISTA_AVD_DIR: /var/local/nvm
+    #   PATH: /var/local/nvm/versions/node/v4.2.1/bin:{{ ansible_env.PATH }}
+
+    block:
+    - name: Get the current AVD Requirement location
+      shell: "ansible-galaxy collection list arista.avd --format yaml | head -1 | cut -d: -f1"
+      register: showlog
+
+    - name: Install the AVD Requirement
+      vars:
+        ARISTA_AVD_DIR: "{{ showlog.stdout }}"
+      pip: 
+        requirements: "{{ ARISTA_AVD_DIR }}/arista/avd/requirements.txt"
+
+    - name: Creates AVD directory
+      file:
+        path: "./{{avd_dir}}"
+        state: directory
+        owner: lab
+        group: lab
+        recurse: yes
+        mode: '0755'
+
+    - name: Download AVD Examples
+      command: "ansible-playbook arista.avd.install_examples"
+      args:
+        chdir: "./{{avd_dir}}"
+      tags:
+        - avd
 
   handlers:
     - name: system start lldpd

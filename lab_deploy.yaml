@@ -1,5 +1,5 @@
 ---
-- hosts: dc2
+- hosts: lab
   gather_facts: false
   collections:
   - arista.eos

@@ -1,5 +1,5 @@
 ---
-- hosts: dc2
+- hosts: lab
   gather_facts: "false"
   vars:
     temp_file: "hostanme.j2"
