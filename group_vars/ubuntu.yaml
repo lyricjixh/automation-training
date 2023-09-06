@@ -67,6 +67,12 @@ clab_git_repo: "https://gitlab.aristanetworks.com/cicd-group/training_ansible.gi
 
 ## Ansible
 ansible_core_ver: "2.15.4rc1"
-ansible_log_dir: "./LOGS"
+ansible_log: "./LOGS"
 ## AVD
 avd_dir: avd_repo
+avd_topo: 
+  - isis-ldp-ipvpn
+  - l2ls-fabric
+  - dual-dc-l3ls
+  - campus-fabric
+  # - single-dc-l3ls

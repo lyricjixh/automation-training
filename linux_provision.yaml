@@ -347,7 +347,7 @@
 
     - name: Creates Ansible Log directory
       file:
-        path: "{{ansible_log_dir}}"
+        path: "{{ansible_log}}"
         state: directory
         owner: lab
         group: lab
@@ -372,13 +372,6 @@
   - name: Staging Arista Validate Design
     tags:
       - avd
-    # vars:
-    #   node_app_dir: /var/local/my_node_app
-
-    # environment:
-    #   ARISTA_AVD_DIR: /var/local/nvm
-    #   PATH: /var/local/nvm/versions/node/v4.2.1/bin:{{ ansible_env.PATH }}
-
     block:
     - name: Get the current AVD Requirement location
       shell: "ansible-galaxy collection list arista.avd --format yaml | head -1 | cut -d: -f1"
@@ -405,6 +398,14 @@
         chdir: "./{{avd_dir}}"
       tags:
         - avd
+
+    - name: Clean up AVD Other Topo examples
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{avd_topo}}"
+      tags:
+        - avd-clean
 
   handlers:
     - name: system start lldpd
