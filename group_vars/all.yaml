@@ -1,8 +1,8 @@
 ---
 
 dellos_cfg_generate: True
-build_dir: "./cfggen"
-log_dir: "./LOGS"
+build_dir: "~lab/cfggen"
+log_dir: "~lab/LOGS"
 
 ansible_python_interpreter: /usr/bin/python3
 
