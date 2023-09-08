@@ -9,6 +9,12 @@
     local_user: "{{ lookup('env', 'USER') }}"
   
   tasks:
+  - name: Change Hostname
+    tags:
+      - hostname
+    hostname:
+      name: "{{ inventory_hostname }}"
+
   - name: Add the Users/Groups
     tags:
       - user
@@ -71,11 +77,11 @@
     - name: Upgrade all apt packages
       apt: upgrade=dist force_apt_get=yes
 
-    - name: Check if a reboot is needed for Debian and Ubuntu boxes
+    - name: Check if a reboot is needed
       register: reboot_required_file
       stat: path=/var/run/reboot-required get_md5=no
 
-    - name: Reboot the Debian or Ubuntu server
+    - name: Reboot if needed
       reboot:
         msg: "Reboot initiated by Ansible due to kernel updates"
         connect_timeout: 5
@@ -228,13 +234,14 @@
     - name: Config Git
       git_config:
         name: "{{ git_cfg.name }}"
-        scope: "{{ git_cfg.scope }}"
+        scope: "global"
 
     - name: List Git Config
-      git_config:
-        list_all: yes
-        scope: "{{ git_cfg.scope }}"
+      command: "git config --global --list"
+      become: no
       register: showlog
+      tags:
+        - gitlog
 
     - name: Display Showlog Stdout
       debug: 
@@ -345,14 +352,19 @@
       tags:
         - clab
 
-    - name: Creates Ansible Log directory
+    - name: Creates Ansible directory
       file:
-        path: "{{ansible_log}}"
+        path: "{{ item }}"
         state: directory
         owner: lab
         group: lab
         recurse: yes
         mode: '0755'
+      loop:
+        - "{{ build_dir }}"
+        - "{{ log_dir }}"
+      tags:
+        - dir
 
     - name: Checking Virtual Topology EoS Version
       command: ansible -m eos_command -a "commands='show version'" ceos -v

@@ -1,8 +1,8 @@
 ---
 
 dellos_cfg_generate: True
-build_dir: "/home/xji/devops/cfggen"
-log_dir: "/home/xji/devops/showtech"
+build_dir: "./cfggen"
+log_dir: "./LOGS"
 
 ansible_python_interpreter: /usr/bin/python3
 
