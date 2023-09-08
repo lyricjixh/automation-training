@@ -56,3 +56,13 @@ topology:
     - endpoints: ["cleaf03:eth32", "spine02:eth3"]
     - endpoints: ["cleaf04:eth31", "spine01:eth4"]
     - endpoints: ["cleaf04:eth32", "spine02:eth4"]
+
+    # POD leaf pair to computes links
+    - endpoints: ["cleaf01:eth1", "host:cleaf01:eth1"]
+    - endpoints: ["cleaf01:eth2", "host:cleaf01:eth2"]
+    - endpoints: ["cleaf02:eth1", "host:cleaf02:eth1"]
+    - endpoints: ["cleaf02:eth2", "host:cleaf02:eth2"]
+    - endpoints: ["cleaf03:eth1", "host:cleaf03:eth1"]
+    - endpoints: ["cleaf03:eth2", "host:cleaf03:eth2"]
+    - endpoints: ["cleaf04:eth1", "host:cleaf04:eth1"]
+    - endpoints: ["cleaf04:eth2", "host:cleaf04:eth2"]
