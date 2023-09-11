@@ -7,11 +7,11 @@ Generating Vlan Interface Configuration
 {% set dummy_vlan_netv6 = "1001:1::/32" %}
 {% set vlan_netmaskv4 = "29" %}
 {% set vlan_netmaskv6 = "112" %}
-{% set vlan_batch = 144 %}
-{% set round = 144 %}
+{% set vlan_batch = 10 %}
+{% set round = 10 %}
 {% set vlan_scale_low = vlan_batch*round %}
 {% set vlan_scale_high = vlan_batch*(round+1) %}
-{% set vip_scale = 20 %}
+{% set vip_scale = 10 %}
 {% set offset = 1001 %}
 {#
   hardware access-list resource sharing vlan in
@@ -30,7 +30,7 @@ vlan {{ offset+n }}
 interface vlan{{ offset+n }}
   ipv6 enable
 {% for m in range(0, vip_scale) %}
-{% set vlan_netv4 = dummy_vlan_netv4|ipsubnet(8,m) %}
+{% set vlan_netv4 = dummy_vlan_netv4|ipsubnet(16,m) %}
 {% if m==0 %}
   ip address virtual {{vlan_netv4 | ipsubnet(vlan_netmaskv4, n) | ipaddr(1) }}
 {% else %}
@@ -38,7 +38,7 @@ interface vlan{{ offset+n }}
 {% endif %}
 {% endfor %}
 {% for m in range(0, vip_scale) %}
-{% set vlan_netv6 = dummy_vlan_netv6|ipsubnet(32,m) %}
+{% set vlan_netv6 = dummy_vlan_netv6|ipsubnet(48,m) %}
   ipv6 address virtual {{ vlan_netv6 | ipsubnet(vlan_netmaskv6, n) | ipaddr(1) }}
 {% endfor %}
 !

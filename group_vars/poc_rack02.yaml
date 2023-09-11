@@ -20,7 +20,7 @@ vxlans:
         vlan: "101"
         netv4: "{{ v101_netv4 }}"
         netv6: "{{ v101_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         mcast:
             igmp: "yes"
             l2_group: "{{ v101_mcast }}"
@@ -34,7 +34,7 @@ vxlans:
         vlan: "141"
         # netv4: "{{ v141_netv4 }}"
         # netv6: "{{ v141_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         helper_addrv4: "{{ v141_helper }}"
         state: "present"
     - 
@@ -42,7 +42,7 @@ vxlans:
         vlan: "201"
         netv4: "{{ v201_netv4 }}"
         netv6: "{{ v201_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         mcast:
             igmp: "yes"
             l2_group: "{{ v201_mcast }}"
@@ -56,7 +56,7 @@ vxlans:
         vlan: "202"
         netv4: "{{ v202_netv4 }}"
         netv6: "{{ v202_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         mcast:
             igmp: "yes"
             l2_group: "{{ v202_mcast }}"

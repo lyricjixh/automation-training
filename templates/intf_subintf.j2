@@ -12,7 +12,7 @@ interface Ethernet{{ port.phy_intf }}
 {% for vlan in port.sub_vlans %}
 {% set subintf_seq = 2*loop.index0+(seq-5) %}
 interface Ethernet{{ port.phy_intf }}.{{ vlan.id }}
-   description yyz-shepcorra VLAN{{ vlan.id }} Te1-1 to Eth{{ port.phy_intf }}.{{ vlan.id }}:SW:{{ vlan.state }}
+   description VLAN{{ vlan.id }} Te1-1 to Eth{{ port.phy_intf }}.{{ vlan.id }}:SW:{{ vlan.state }}
    encapsulation dot1q vlan {{ vlan.id }}
    ip address {{ subvlan_netv4|ipsubnet(subvlan_netmaskv4, subintf_seq) | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}/{{ subvlan_netmaskv4 }}
    ip ospf dead-interval 3

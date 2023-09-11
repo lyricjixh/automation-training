@@ -78,7 +78,7 @@ vlans:
 #       - 
 #           desc: "yyz-shepcorra VLAN13 Te1-1 to Eth45.11:SW:UP"
 #           id: "13"
-#           vrf: "BMS-subnet"
+#           vrf: "vrf01-subnet"
 #           netv4: "{{ subvlan_netv4 }}"
 
 bfd:
@@ -407,8 +407,8 @@ evpn:
         pfx_list: "NO_ARP_PROXY"
     vrf:
     - 
-        name: "BMS-subnet"
-        desc: "BMS VRF"
+        name: "vrf01-subnet"
+        desc: "vrf01 VRF"
         rd_pfx: "{{ lpbk_olay.addr_v4 }}"
         rt_pfx: "1001"
         l3_vni: 
@@ -605,7 +605,7 @@ evpn:
             # - area: "0.0.0.12"
             #   supernet: "172.17.0.0/16"
           redis: 
-            - r_map: "subnet-from-BMS-vrf"
+            - r_map: "subnet-from-vrf01-vrf"
               proto: bgp
             - r_map:
               proto: connected

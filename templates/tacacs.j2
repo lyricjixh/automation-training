@@ -15,7 +15,7 @@ tacacs-server host {{ server.addr }} timeout {{ aaa_tac.timeout }} key 0 {{ serv
 !
 aaa group server tacacs+ {{ group.name }}
 {% for server in group.server %}
-   server {{ server.addr }}
+ server {{ server.addr }}
 {% endfor %}
 !
 {% endfor %}

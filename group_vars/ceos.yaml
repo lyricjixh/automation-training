@@ -307,7 +307,7 @@ policy:
                     action: "permit"
                     range: "{{ v101_netv4 }} le 32"
         -
-            name: "BMS-subnet-tenant"
+            name: "vrf01-subnet-tenant"
             afi: "ipv4"
             step: 10
             prefix:
@@ -465,7 +465,7 @@ policy:
                     object:
                     action:
         -
-            name: "BMS-subnet-IGP"
+            name: "vrf01-subnet-IGP"
             step: 10
             rule:
                 -
@@ -476,13 +476,13 @@ policy:
                         type: "community"
                         object: "no-export"
         -
-            name: "BMS-subnet-TENANT"
+            name: "vrf01-subnet-TENANT"
             step: 10
             rule:
                 -
                     allow: "permit"
                     type: "ip address prefix-list"
-                    object: "BMS-subnet-tenant"
+                    object: "vrf01-subnet-tenant"
                     action:
         -
             name: "SEND-COMMUNITY"

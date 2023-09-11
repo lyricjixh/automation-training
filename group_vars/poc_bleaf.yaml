@@ -20,7 +20,7 @@ vxlans:
         vlan: "101"
         netv4: "{{ v101_netv4 }}"
         netv6: "{{ v101_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         mcast:
             igmp: "yes"
             l2_group: "{{ v101_mcast }}"
@@ -34,7 +34,7 @@ vxlans:
         vlan: "102"
         netv4: "{{ v102_netv4 }}"
         netv6: "{{ v102_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         mcast:
             igmp: "yes"
             l2_group: "{{ v102_mcast }}"
@@ -48,7 +48,7 @@ vxlans:
         vlan: "141"
         # netv4: "{{ v141_netv4 }}"
         # netv6: "{{ v141_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         helper_addrv4: "{{ v141_helper }}"
         state: "present"
     - 
@@ -56,7 +56,7 @@ vxlans:
         vlan: "142"
         # netv4: "{{ v142_netv4 }}"
         # netv6: "{{ v142_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         helper_addrv4: "{{ v142_helper }}"
         state: "present"
     - 
@@ -64,7 +64,7 @@ vxlans:
         vlan: "201"
         netv4: "{{ v201_netv4 }}"
         netv6: "{{ v201_netv6 }}"
-        vrf: "BMS-subnet"
+        vrf: "vrf01-subnet"
         mcast:
             igmp: "yes"
             l2_group: "{{ v102_mcast }}"
@@ -99,7 +99,7 @@ sub_interfaces:
         - 
             desc: "yyz-shepcorra VLAN13 Te1-1 to Eth45.11:SW:UP"
             id: "13"
-            vrf: "BMS-subnet"
+            vrf: "vrf01-subnet"
             netv4: "{{ subvlan_netv4 }}"
             state: "present"
 
@@ -116,7 +116,7 @@ edge_links:
     ## Edge Addr higher(2), ISP lower(1)
     addr_v4: "{{ edge_netv4|ansible.utils.ipsubnet(edge_netmaskv4, edge_seq)|ansible.utils.ipaddr(2) }}"
     addr_v6: "{{ edge_netv6|ansible.utils.ipsubnet(edge_netmaskv6, edge_seq)|ansible.utils.ipaddr(2) }}"
-    vrf: "BMS-subnet"
+    vrf: "vrf01-subnet"
     mcast:
         igmp:
         l2_group:
@@ -131,7 +131,7 @@ edge_links:
 #     ## Edge Addr higher(2), ISP lower(1)
 #     netv4: "{{ edge_netv4|ansible.utils.ipsubnet(edge_netmaskv4, edge_seq) }}"
 #     netv6: "{{ edge_netv6|ansible.utils.ipsubnet(edge_netmaskv6, edge_seq) }}"
-#     vrf: "BMS-subnet"
+#     vrf: "vrf01-subnet"
 #     mcast:
 #         igmp:
 #         l2_group:
@@ -149,7 +149,7 @@ test_links:
 ## Edge Addr higher(2), ISP lower(1)
     netv4: "{{ test_netv4|ansible.utils.ipsubnet(test_netmaskv4, seq-5 ) }}"
     netv6: "{{ test_netv6|ansible.utils.ipsubnet(test_netmaskv6, seq-5 ) }}"
-    vrf: "BMS-subnet"
+    vrf: "vrf01-subnet"
 
 edge_bgp:
   local_as: "{{ asn_base+rack_no }}"
@@ -210,25 +210,25 @@ edge_bgp:
       desc: "DC Fabric Edge Peer V4"
       remote_as: "{{ remote_isp_asn }}"
       peer_group: "ISP-PEER-GROUP_v4"
-      vrf: "BMS-subnet"
+      vrf: "vrf01-subnet"
     - 
       addr: "{{ edge_links[0].netv6 | ansible.utils.ipaddr(1) | ansible.utils.ipaddr('address') }}"
       desc: "DC Fabric Edge Peer V6"
       remote_as: "{{ remote_isp_asn }}"
       peer_group: "ISP-PEER-GROUP_v6"
-      vrf: "BMS-subnet"
+      vrf: "vrf01-subnet"
     - 
       addr: "{{ test_links[0].netv4 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}"
       desc: "Tester Peer V4"
       remote_as:
       peer_group: "tester_v4"
-      vrf: "BMS-subnet"
+      vrf: "vrf01-subnet"
     - 
       addr: "{{ test_links[0].netv6 | ansible.utils.ipaddr(2) | ansible.utils.ipaddr('address') }}"
       desc: "Tester Peer V6"
       remote_as:
       peer_group: "tester_v6"
-      vrf: "BMS-subnet"
+      vrf: "vrf01-subnet"
   afi: 
   #   ipv4:
   #   -

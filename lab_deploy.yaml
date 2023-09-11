@@ -120,12 +120,6 @@
     tags:
     - edge
 
-  # - name: Enable Standard BGP on Leaf
-  #   eos_config:
-  #       src: bgp_underlay_leaf.j2
-  #   tags:
-  #   - standard
-
   - name: Enable EVPN on LEAVES
     block:
     - name: Enable Vxlan Tunneling
@@ -170,45 +164,3 @@
     when: "'leaf' in inventory_hostname"
     tags:
     - monitor
-
-# - hosts: func_edge
-#   gather_facts: false
-#   collections:
-#   - arista.eos
-
-#   tasks:
-#   - name: Enable Edge Functions
-#     block:
-#       - name: Enable loopback Interface
-#         eos_config:
-#             src: intf_lpbk.j2
-#         tags:
-#         - loopback
-
-#       - name: Enable PTP Interface
-#         eos_config:
-#             src: intf_ptp_edge.j2
-#         tags:
-#         - ptp
-
-#       - name: Enable Tester Interface
-#         eos_config:
-#             src: intf_test_isp.j2
-#         tags:
-#         - tester
-
-#       - name: Enable Edge BGP on ISP GW
-#         eos_config:
-#             src: bgp_gateway.j2
-#         when: "'gw' in inventory_hostname"
-#         tags:
-#         - standard
-
-#       - name: Enable Edge BGP in EDGE VRF
-#         eos_config:
-#             src: bgp_edge.j2
-#         when: "'spine' in inventory_hostname"
-#         tags:
-#         - bgpedge
-#     tags:
-#       - edge
