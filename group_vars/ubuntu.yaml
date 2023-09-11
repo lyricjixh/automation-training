@@ -55,6 +55,9 @@ git_cfg:
   scope: "global"
 
 git_clone_dir: "training"
+target_build_dir: "~lab/cfggen"
+target_log_dir: "~lab/LOGS"
+
 ## [3.8, 3.9, 3.10, 3.11, 3.12]
 python3_version: "3.10"
 

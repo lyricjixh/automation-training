@@ -1,6 +1,5 @@
 ---
-
-dellos_cfg_generate: True
+# Ansible Directory, not in Git Repo
 build_dir: "../cfggen"
 log_dir: "../LOGS"
 
@@ -10,53 +9,12 @@ mtu: 9216
 
 all_system:
 hostname: "{{ inventory_hostname }}"
-sysuser_passwd: "{{ vault_os10_password }}"
+sysuser_passwd: "{{ vault_lab_password }}"
 
-pause_time: 1200   # Min 1200 sec is needed  for boot into ONIE from dellos10
-#pause_time: 700   # Min 700 sec is needed  for boot into ONIE from ceos
 ssh_esc : '\x03\n'
 ssh_close: "exit\n"
 
 cmds: "{{ cmd.splitlines() }}"
-
-nos_install_exp: 
-  'ONIE:/root #': "{{cmds}}"
-  'Initializing installer(.*)': "{{ssh_esc}}"
-  'Installing OS10 on primary partition(.*)': "{{ssh_esc}}"
-  'OS10 installation on primary partition is complete(.*)': "{{ssh_esc}}"
-
-ceos_nos_install_exp:  
-  'ONIE:/root #': "{{cmds}}"
-  'Initializing ceos(.*)': "{{ssh_esc}}"
-  'Installing ceos to(.*)': "{{ssh_esc}}"
-  'Installed ceos base image ceos-OS(.*)': "{{ssh_esc}}"
-
-ceos_nos_upgrade_exp:
-  'New image will be installed(.*)': "y \n"
-  'Installing image ceos-OS(.*)': "{{ssh_esc}}"
-  'Installed ceos base image ceos-OS(.*)': "{{ssh_esc}}"
-
-exp: {}
-onie_cmd: |
-  onie-discovery-stop
-  exit
-
-onie_prompt_exp:
-  'ONIE:/root #': "{{ssh_close}}"
-
-extra_exp: {}
-
-ssh_exp:
-  "Host" : "{{ssh_esc}}"
-default_exp:
-  "Permission denied.*": "{{ssh_esc}}"
-
-#image: "http://10.11.8.184///tftpboot/NGOS/FMB-ar-rel_10.5.0-release/AmazonInstallers/latest-build-468/PKGS_OS10-Enterprise-10.5.0.2.468stretch-installer-x86_64.bin"
-#image: "http://10.11.8.184//tftpboot/users/kannank/ceos-broadcom-cloud-base_2.1_RC7.bin"
-#image: "http://10.11.8.184//tftpboot/ceos/engops_ceosbuild/30/ceos-broadcom.bin"
-nos_install: |
-  onie-nos-install {{ image|default('') }}
-
 
 # Vault Key Repo
 # ansible-vault encrypt_string <encrypted_value> --name '<var_name>'
@@ -163,6 +121,7 @@ vault_ansible_password: !vault |
           37393264393338353731323031313531383233626563636131386233383861383365363730393736
           6534346436396664620a343462376337333166356634623961383561353562653365396638626663
           6230
+
 vault_netops_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           34656533636136373131373262613463663234353238626263323362323961393663643264663539
@@ -170,6 +129,7 @@ vault_netops_password: !vault |
           64613866336235393962326130353535303563396538316438613733646136366432663731393637
           3434383737663665320a323838373032636434363061396336656164346130623031336365333565
           6636
+
 vault_ntp_auth_key1: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           65373632616664656438323931366434653936363762333234323730316134306633303937633364
@@ -177,6 +137,7 @@ vault_ntp_auth_key1: !vault |
           64326236373339356464343064633737336662313136646230393164393364363539633030306431
           3565616435636239650a626634346235356462363966373530613230363239326631633462303633
           3737
+
 vault_ntp_auth_key2: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           38393262346237346631623832313137643630326661633734343931376633313137346563653565
@@ -184,6 +145,7 @@ vault_ntp_auth_key2: !vault |
           64306232366138333137663062613661653262313630396334613835303639393732333636326130
           6461373032313564320a396265656162313137373539363364346662636435643737636466306662
           3366
+
 vault_demo_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           35663566613839633036383735316663393733326230326633386161646263646134616138376561
@@ -191,11 +153,3 @@ vault_demo_password: !vault |
           37643834356166623364373932653834313136396366323037393430656438353731373137663161
           3761333230343764370a666539316231326163306235373263643333653633353936363330386138
           6237
-
-vault_netbox_password: !vault |
-          $ANSIBLE_VAULT;1.1;AES256
-          65343664333363386637383165313133633636666638626462313237323264663861386163323166
-          6466316132376661623363613339336131623034343065370a373066323866653066313063663436
-          64343431346635346530656338333036623337336630613061343665303536323465303436353930
-          3865343663356561630a613363303761366266323733376263616334303865333835346230393232
-          3734
