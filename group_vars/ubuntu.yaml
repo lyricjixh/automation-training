@@ -69,7 +69,7 @@ clab_topo: "~{{ansible_ssh_user}}/training/topology/ceos.clab.yaml"
 clab_git_repo: "https://gitlab.aristanetworks.com/cicd-group/training_ansible.git"
 
 ## Ansible
-ansible_core_ver: "2.15.4rc1"
+ansible_core_ver: "2.14.9"
 ansible_log: "./LOGS"
 ## AVD
 avd_dir: avd_repo

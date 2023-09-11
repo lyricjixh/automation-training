@@ -384,6 +384,7 @@
   - name: Staging Arista Validate Design
     tags:
       - avd
+    become: no
     block:
     - name: Get the current AVD Requirement location
       shell: "ansible-galaxy collection list arista.avd --format yaml | head -1 | cut -d: -f1"

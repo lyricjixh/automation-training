@@ -1,2 +1,2 @@
-<<<<<<< HEAD
-fire off the ci/cd pipeline for demo purpose
+Ansible Training Lab
+
