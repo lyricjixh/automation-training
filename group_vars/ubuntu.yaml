@@ -54,7 +54,7 @@ git_cfg:
   name: "xianghui.ji@arista.com"
   scope: "global"
 
-git_clone_dir: "training"
+git_clone_dir: "training_ansible"
 target_build_dir: "~lab/cfggen"
 target_log_dir: "~lab/LOGS"
 
@@ -66,13 +66,14 @@ image_dir: "images"
 ## [4.28.8.1M, 4.29.4M, 4.30.2F]
 eos_ver: "4.30.2F"
 clab_topo: "~{{ansible_ssh_user}}/training/topology/ceos.clab.yaml"
-clab_git_repo: "https://gitlab.aristanetworks.com/cicd-group/training_ansible.git"
+clab_git_repo: "https://github.com/lyricjixh/automation-training.git"
 
 ## Ansible
 ansible_core_ver: "2.14.9"
 ansible_log: "./LOGS"
 ## AVD
-avd_dir: avd_repo
+avd_clone_dir: "training_avd"
+avd_git_repo: "https://github.com/lyricjixh/training_avd.git"
 avd_topo: 
   - isis-ldp-ipvpn
   - l2ls-fabric

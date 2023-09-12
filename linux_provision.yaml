@@ -27,11 +27,11 @@
 
     - name: Copy our Authorized Key to the lab user
       # copy: src=/home/{{ansible_ssh_user}}/.ssh/id_rsa.pub dest=/home/lab/.ssh/authorized_keys
-      copy: src=~xji/.ssh/id_rsa.pub dest=/home/lab/.ssh/authorized_keys
+      copy: src=~/.ssh/id_rsa.pub dest=/home/lab/.ssh/authorized_keys
 
     - name: Copy our Authorized Key to the Root user
       # copy: src=/home/{{ansible_ssh_user}}/.ssh/id_rsa.pub dest=/root/.ssh/authorized_keys
-      copy: src=~xji/.ssh/id_rsa.pub dest=/root/.ssh/authorized_keys
+      copy: src=~/.ssh/id_rsa.pub dest=/root/.ssh/authorized_keys
 
     - name: Make sure we have a 'devops' group
       group:
@@ -269,10 +269,10 @@
     - name: Execute Clab Script
       command: bash -c /tmp/clab_inst.sh
 
-    - name: Remove the script
-      file:
-        path: /tmp/clab_inst.sh
-        state: absent
+    # - name: Remove the script
+    #   file:
+    #     path: /tmp/clab_inst.sh
+    #     state: absent
 
     - name: check containerlab version
       command: "containerlab version"
@@ -396,29 +396,38 @@
       pip: 
         requirements: "{{ ARISTA_AVD_DIR }}/arista/avd/requirements.txt"
 
-    - name: Creates AVD directory
-      file:
-        path: "./{{avd_dir}}"
-        state: directory
-        owner: lab
-        group: lab
-        recurse: yes
-        mode: '0755'
-
-    - name: Download AVD Examples
-      command: "ansible-playbook arista.avd.install_examples"
-      args:
-        chdir: "./{{avd_dir}}"
+    - name: Clone AVD Reporsitory
+      ansible.builtin.git:
+        repo: '{{avd_git_repo}}'
+        dest: './{{ avd_clone_dir }}'
+        update: yes
+      become: False
       tags:
-        - avd
+        - avdrepo
 
-    - name: Clean up AVD Other Topo examples
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop: "{{avd_topo}}"
-      tags:
-        - avd-clean
+    # - name: Creates AVD directory
+    #   file:
+    #     path: "./{{avd_dir}}"
+    #     state: directory
+    #     owner: lab
+    #     group: lab
+    #     recurse: yes
+    #     mode: '0755'
+
+    # - name: Download AVD Examples
+    #   command: "ansible-playbook arista.avd.install_examples"
+    #   args:
+    #     chdir: "./{{avd_dir}}"
+    #   tags:
+    #     - avd
+
+    # - name: Clean up AVD Other Topo examples
+    #   file:
+    #     path: "{{ item }}"
+    #     state: absent
+    #   loop: "{{avd_topo}}"
+    #   tags:
+    #     - avd-clean
 
   handlers:
     - name: system start lldpd
