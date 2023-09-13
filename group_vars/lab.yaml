@@ -117,9 +117,9 @@ aaa_radius:
 snmp:
     vrf: "{{ mgmt_vrf }}"
     src_intf: "Management{{mgmt_intf}}"
-    contact: "netadmin@aexp.com, contact 602-766-3000"
+    contact: "netadmin"
     proto_port: "1161"    ## leave blank for default 161
-    location: "E3:CAN-TOR-029:FABRIC:CC:24X7:Sheperd:001:A04"
+    location: "Santa Clara, CA"
     view:
       - name: "globalView"
         oid: "1.3.6.1"
