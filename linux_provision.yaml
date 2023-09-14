@@ -252,6 +252,7 @@
         repo: '{{clab_git_repo}}'
         dest: './{{ git_clone_dir }}'
         update: yes
+        force: true
       become: False
       tags:
         - gitrepo
@@ -401,6 +402,7 @@
         repo: '{{avd_git_repo}}'
         dest: './{{ avd_clone_dir }}'
         update: yes
+        force: true
       become: False
       tags:
         - avdrepo
