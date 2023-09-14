@@ -45,10 +45,12 @@
 
     - name: Setup the local user accounts
       block:
+      # - name: Purge all users
+      #   arista.eos.eos_user:
+      #     purge: true
       - name: Enable all local users
         eos_config:
           src: user.j2
-
       # - name: Add SSHKEY for Ansible user
       #   arista.eos.eos_user:
       #     name: ansible
