@@ -65,7 +65,7 @@ python3_version: "3.10"
 image_dir: "images"
 ## [4.28.8.1M, 4.29.4M, 4.30.2F]
 eos_ver: "4.30.2F"
-clab_topo: "~{{ansible_ssh_user}}/training/topology/ceos.clab.yaml"
+clab_topo: "~{{ansible_ssh_user}}/{{git_clone_dir}}/topology/ceos.clab.yaml"
 clab_git_repo: "https://github.com/lyricjixh/automation-training.git"
 
 ## Ansible
