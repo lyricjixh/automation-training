@@ -49,12 +49,11 @@
         eos_config:
           src: user.j2
 
-      - name: Add SSHKEY for Ansible user
-        arista.eos.eos_user:
-          name: ansible
-          sshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-          state: present
-
+      # - name: Add SSHKEY for Ansible user
+      #   arista.eos.eos_user:
+      #     name: ansible
+      #     sshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      #     purge: true
       tags:
       - users
     tags:
