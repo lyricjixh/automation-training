@@ -1,4 +1,5 @@
-./clab-ceos-lab
-./config_backup
-./documentation
-./intended
+documentation/*
+intended/*
+clab-ceos-lab/*
+config_backup/*
+topology/.ceos.clab.yaml.bak
