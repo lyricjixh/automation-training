@@ -49,7 +49,7 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 | cleaf04 | eth1 | - | host | bridge |
 | cleaf04 | eth2 | - | host | bridge |
 
-> Current repository is built with cEOS management interface (`Management0`). You can update `mgmt_interface` field to `Management1` in the [Lab yaml](./group_vars/lab.yaml) `group_vars`.
+> Current repository is built with cEOS management interface (`Management0`). You can update `mgmt_interface` field to `Management1` in the ['lab.yaml'](./group_vars/lab.yaml) `group_vars`.
 
 ## Getting Started
 
