@@ -11,21 +11,43 @@ This repository is configured to run [`arista.eos`](https://github.com/aristanet
 The diagram below shows that the Containerlab topology has one leaf/spine cluster. To simplify the lab topology, only the cEOS based switch nodes are created without hosts. The virutal lab topolgy meta data is defined in [ceos.clab.yaml](./topology/ceos.clab.yaml).
 
 <p align="center">
-  <img src="files/imgs/clab-topo.jpg" alt="Containerlab Topology" width="600"/>
+  <img src="files/imgs/clab-topo.jpg" alt="Containerlab Topology" width="650"/>
 </p>
 
 ## Containerlab topology device list
 
 | Device | IP Address |
 | ------ | ------------ |
-| spine01   |172.100.100.101 |
-| spine02   |172.100.100.102 |
-| s1-leaf1  |172.100.100.2 |
-| s1-leaf2  |172.100.100.3 |
-| s1-leaf3  |172.100.100.4 |
-| s1-leaf4  |172.100.100.5 |
-| s1-host1  |172.100.100.6 |
-| s1-host2  |172.100.100.7 |
+| spine01  |172.100.100.101 |
+| spine02  |172.100.100.102 |
+| cleaf01  |172.100.100.2 |
+| cleaf02  |172.100.100.3 |
+| cleaf03  |172.100.100.4 |
+| cleaf04  |172.100.100.5 |
+
+## Containerlab topology port-map
+| Device  | port | - | Device | port |
+| ------  | ---- | - | ------ | ---- |
+| spine01 | eth1 | - | cleaf01 | eth31 |
+| spine01 | eth2 | - | cleaf02 | eth31 |
+| spine01 | eth3 | - | cleaf03 | eth31 |
+| spine01 | eth4 | - | cleaf04 | eth31 |
+| spine02 | eth1 | - | cleaf01 | eth31 |
+| spine02 | eth2 | - | cleaf02 | eth31 |
+| spine02 | eth3 | - | cleaf03 | eth31 |
+| spine02 | eth4 | - | cleaf04 | eth31 |
+| cleaf01 | eth27 | - | cleaf02 | eth27 |
+| cleaf01 | eth28 | - | cleaf02 | eth28 |
+| cleaf03 | eth27 | - | cleaf04 | eth27 |
+| cleaf03 | eth28 | - | cleaf04 | eth28 |
+| cleaf01 | eth1 | - | host | bridge |
+| cleaf01 | eth2 | - | host | bridge |
+| cleaf02 | eth1 | - | host | bridge |
+| cleaf02 | eth2 | - | host | bridge |
+| cleaf03 | eth1 | - | host | bridge |
+| cleaf03 | eth2 | - | host | bridge |
+| cleaf04 | eth1 | - | host | bridge |
+| cleaf04 | eth2 | - | host | bridge |
 
 > Current repository is built with cEOS management interface (`Management0`). You can update `mgmt_interface` field to `Management1` in the [Lab yaml](./group_vars/lab.yaml) `group_vars`.
 
