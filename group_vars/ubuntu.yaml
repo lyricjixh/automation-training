@@ -23,7 +23,7 @@ ubuntu_packages:
 
 pip_packages:
   - docker
-  - docker-compose
+  # - docker-compose
   - requests
   - urllib3
   - ansible-pylibssh
