@@ -268,7 +268,13 @@
         mode: 0755
 
     - name: Execute Clab Script
-      command: bash -c /tmp/clab_inst.sh
+      ansible.builtin.expect:
+        command: "bash -c /tmp/clab_inst.sh"
+        responses:
+          "[Y/n]": "Y"
+
+    # - name: Execute Clab Script
+    #   command: "bash -c /tmp/clab_inst.sh"
 
     # - name: Remove the script
     #   file:
