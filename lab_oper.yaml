@@ -1,6 +1,6 @@
 ---
 - hosts: lab
-  gather_facts: "false"
+  gather_facts: "true"
   vars:
     temp_file: "hostanme.j2"
     ansible_command_timeout: 300
