@@ -107,7 +107,7 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 
       ```shell
       # day2 operation with log collecting
-      ansible-playbook lab_oper.yaml
+      ansible-playbook lab_oper.yaml -t generic
       ```
 
 - Run the playbook to generate the specific configuration
@@ -116,7 +116,7 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 
       ```shell
       # Config generation for the specific function
-      ansible-playbook lab_cfggen.yaml -e "temp_file=bgp_fabric.yaml" -l cleaf01
+      ansible-playbook lab_cfggen.yaml -e "temp_file=bgp_fabric.j2" -l cleaf01
       ```
 
 - [Arista Ansible AVD Collection](https://github.com/aristanetworks/ansible-avd)

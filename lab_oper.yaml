@@ -2,7 +2,7 @@
 - hosts: lab
   gather_facts: "true"
   vars:
-    temp_file: "hostanme.j2"
+    temp_file: "hostname.j2"
     ansible_command_timeout: 300
   collections:
   - arista.eos
