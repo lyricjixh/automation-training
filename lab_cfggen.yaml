@@ -12,7 +12,7 @@
     #     round: "{{ item }}"
     template:
       src: "{{ temp_file }}"
-      dest: "{{target_build_dir}}/{{hostname}}.conf.part"
+      dest: "{{build_dir}}/{{hostname}}.conf.part"
     # delegate_to: localhost
     # with_items: [0,1]
     tags:
