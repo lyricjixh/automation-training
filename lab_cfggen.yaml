@@ -6,6 +6,18 @@
   collections:
   - arista.eos
 
+  pre_tasks:
+  - name: Create a show log directory if it does not exist
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop:
+      - "{{ log_dir }}"
+      - "{{ build_dir }}"
+    tags:
+     - logdir
+
   tasks:
   - name: Generate the templated config
     # vars:
