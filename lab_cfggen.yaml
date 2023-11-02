@@ -33,7 +33,7 @@
   - name: Display the generated config
     debug: var=item
     with_file:
-      - "{{save_dir}}/{{hostname}}.conf.part"
+      - "{{build_dir}}/{{hostname}}.conf.part"
     tags:
       - cfggen
 
