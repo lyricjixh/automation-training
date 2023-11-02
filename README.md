@@ -107,7 +107,7 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 
       ```shell
       # day2 operation with log collecting
-      ansible-playbook lab_oper.yaml -t generic,logdir,archive
+      ansible-playbook lab_oper.yaml -t generic
       ```
 
 - Run the playbook to generate the specific configuration
