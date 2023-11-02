@@ -7,7 +7,7 @@
   - arista.eos
 
   pre_tasks:
-  - name: Create a show log directory if it does not exist
+  - name: Create log and build directory if it does not exist
     ansible.builtin.file:
       path: "{{ item }}"
       state: directory
