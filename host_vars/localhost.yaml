@@ -1,6 +1,6 @@
 ansible_connection: local
-ansible_ssh_user: xji
-ansible_ssh_pass: "{{ vault_xji_password }}"
+ansible_ssh_user: lab
+ansible_ssh_pass: "{{ vault_lab_password }}"
 ansible_become: yes
 ansible_become_method: sudo
-ansible_become_pass: "{{ vault_xji_password }}"
+ansible_become_pass: "{{ vault_lab_password }}"

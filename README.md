@@ -122,6 +122,13 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
       ansible-playbook lab_cfggen.yaml -e "temp_file=bgp_fabric.j2" -l cleaf01
       ```
 
+- Retrieve the encrypted password/keys in Vault
+
+    - Execute the following command:
+      ```shell
+      ansible -m debug -a "var=vault_tac_key" localhost
+      ```
+
 - [Arista Ansible AVD Collection](https://github.com/aristanetworks/ansible-avd)
 - [Arista CloudVision Collection](https://github.com/aristanetworks/ansible-cvp)
 - [Arista AVD documentation](https://avd.arista.com)
