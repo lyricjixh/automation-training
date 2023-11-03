@@ -56,35 +56,35 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 ### Spawn and inspect the containerlab
 
 - Spawn the containerlab virtual topology
+  # spawn containerlab
 
    ```shell
-    # spawn containerlab
     containerlab deploy -t topology/ceos.clab.yaml --reconfigure
     ```
 
 - Check the virtual topology state
+  # inspect containerlab
 
    ```shell
-    # inspect containerlab
     containerlab inspect -t topology/ceos.clab.yaml
     ```
 
 ### Connect to your Containerlab environment
 
 - Connect to individual container from the local host
+  # ssh the cleaf01, oob-ip is exposed in the inspect check output
+  # credential as default (admin/admin).
 
    ```shell
-    # ssh the cleaf01, oob-ip is exposed in the inspect check output
-    # credential as default (admin/admin).
     ssh admin@172.100.100.2
     ```
 
 - Run ad hoc Ansible to check the topology
 
     - Execute the following command:
+      # ad hoc, -m module, -a variable, -v verbose
 
       ```shell
-      # ad hoc, -m module, -a variable.
       ansible -m eos_command -a "commands='show version,show lldp neighbor'" lab -v
       ```
 
@@ -93,9 +93,9 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 - Run the playbook to prepare deploy EVPN cluster
 
     - Execute the following command:
+      # deploy the evpn cluster from scratch
 
       ```shell
-      # deploy the evpn cluster from scratch
       ansible-playbook lab_deploy.yaml
       ```
 
@@ -104,18 +104,17 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 - Run the playbook to collect the logs
 
     - Execute the following command:
+      # day2 operation with log collecting
 
       ```shell
-      # day2 operation with log collecting
       ansible-playbook lab_oper.yaml -t generic
       ```
 
 - Run the playbook to generate the specific configuration
 
     - Execute the following command:
-
-      ```shell
       # Config generation for the specific function
+      ```shell
       ansible-playbook lab_cfggen.yaml -e "temp_file=bgp_fabric.j2" -l cleaf01
       ```
 
