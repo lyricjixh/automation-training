@@ -82,6 +82,8 @@
     - name: Check if a reboot is needed
       register: reboot_required_file
       stat: path=/var/run/reboot-required get_md5=no
+      tags:
+        - reboot
 
     - name: Reboot if needed
       reboot:
