@@ -92,6 +92,14 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 
     - Check the end logs of the playbook running. There shall be no errors.
 
+### Ansible Arista Facts Collection
+- Collect the Arista Platform information
+
+    - Execute the following command:
+      ```shell
+      ansible -m eos_facts -a "gather_subset=hardware" smv472 -v
+      ```
+
 ### Ansible Vault
 - Create & Retrieve the encrypted password/keys in Vault
 
