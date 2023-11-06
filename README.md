@@ -79,6 +79,7 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
     ssh admin@172.100.100.2
     ```
 
+### Ansible ad hoc
 - Run ad hoc Ansible to check the topology
 
     - Execute the following command:
@@ -91,6 +92,16 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 
     - Check the end logs of the playbook running. There shall be no errors.
 
+### Ansible Vault
+- Create & Retrieve the encrypted password/keys in Vault
+
+    - Execute the following command:
+      ```shell
+      ansible-vault encrypt_string 'lab123' --name 'vault_netops_password'
+      ansible -m debug -a "var=vault_netops_password" localhost
+      ```
+
+### Ansible Playbook
 - Run the playbook to prepare deploy EVPN cluster
 
     - Execute the following command:
@@ -120,13 +131,6 @@ The diagram below shows that the Containerlab topology has one leaf/spine cluste
 
       ```shell
       ansible-playbook lab_cfggen.yaml -e "temp_file=bgp_fabric.j2" -l cleaf01
-      ```
-
-- Retrieve the encrypted password/keys in Vault
-
-    - Execute the following command:
-      ```shell
-      ansible -m debug -a "var=vault_tac_key" localhost
       ```
 
 - [Arista Ansible AVD Collection](https://github.com/aristanetworks/ansible-avd)

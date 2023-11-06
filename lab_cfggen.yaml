@@ -6,6 +6,9 @@
   collections:
   - arista.eos
 
+  vars_files:
+   - group_vars/vault.yaml
+
   pre_tasks:
   - name: Create log and build directory if it does not exist
     ansible.builtin.file:

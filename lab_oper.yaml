@@ -7,6 +7,9 @@
   collections:
   - arista.eos
 
+  vars_files:
+   - group_vars/vault.yaml
+
   tasks:
   - name: Display UUT information
     debug:
@@ -79,21 +82,8 @@
       eos_command:
         commands:
           - show version
-          # - show hardware capacity | no-more
-          # - show process top once | no-more
-          # - show process top memory once | no-more
-          # - show platform sand l3 summary
           - show bgp summary | no-more
-          # - show bgp evpn summary | no-more
-          # - show bgp evpn route-type imet detail | no-more
-          # - show bgp evpn route-type mac-ip detail | no-more
-          # - show bgp evpn route-type ip-prefix ipv4 detail | no-more
-          # - show ip route vrf all summary | no-more
           - show vrf
-          # # - show ip ospf nei vrf all
-          # # - show ipv6 ospf nei vrf all
-          # - show port-channel dense
-          # - show log | no-more
       register: show_output
 
     - name: save output to local directory

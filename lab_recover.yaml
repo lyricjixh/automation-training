@@ -4,6 +4,9 @@
   collections:
   - arista.eos
 
+  vars_files:
+   - group_vars/vault.yaml
+
   tasks:
   - name: Disable BGP
     vars:
